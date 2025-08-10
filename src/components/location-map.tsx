@@ -16,8 +16,8 @@ export const LocationMap: FC = () => {
       <Image 
         src={`https://placehold.co/800x400.png`}
         alt="Static map placeholder"
-        layout="fill"
-        objectFit="cover"
+        fill
+        className="object-cover"
         data-ai-hint="map city"
       />
       <div className="absolute inset-0 flex items-center justify-center bg-black/30">
