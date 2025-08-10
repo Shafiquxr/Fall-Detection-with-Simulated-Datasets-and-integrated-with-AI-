@@ -2,7 +2,7 @@
 'use client';
 
 import type { FC } from 'react';
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { determineAlertEscalation } from '@/ai/flows/alert-escalation-determination';
 import type { Caregiver, FallSeverity, AlertStatus, Escalation } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
@@ -30,6 +30,19 @@ const GuardianAngelPage: FC = () => {
   const [escalation, setEscalation] = useState<Escalation | null>(null);
   const [fallSeverity, setFallSeverity] = useState<FallSeverity | null>(null);
   const { toast } = useToast();
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+
+  useEffect(() => {
+    if (alertStatus === 'active') {
+      audioRef.current?.play().catch(console.error);
+    } else {
+      audioRef.current?.pause();
+      if(audioRef.current) {
+        audioRef.current.currentTime = 0;
+      }
+    }
+  }, [alertStatus]);
 
   const isTimerRunning = alertStatus === 'active' && escalation !== null;
 
@@ -163,6 +176,7 @@ const GuardianAngelPage: FC = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <audio ref={audioRef} src="https://www.soundjay.com/misc/sounds/smoke-detector-beeping-01.mp3" loop />
       <header className="p-4 border-b border-border/60 bg-card/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
