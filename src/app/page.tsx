@@ -86,33 +86,26 @@ const GuardianAngelPage: FC = () => {
 
   const handleEscalation = useCallback(() => {
     if (!escalation || !fallSeverity) return;
-
+  
     if (escalation.timer > 1) {
-        setEscalation(prev => prev ? { ...prev, timer: prev.timer - 1 } : null);
-        return;
+      setEscalation((prev) => (prev ? { ...prev, timer: prev.timer - 1 } : null));
+      return;
     }
-
-    const nextIndex = escalation.currentIndex + 1;
-    if (nextIndex < escalation.path.length) {
-        const nextCaregiverIndex = escalation.path[nextIndex];
-        notifyCaregiver(nextCaregiverIndex, fallSeverity);
-        toast({
-            title: "Alert Escalated",
-            description: `No response. Notifying next caregiver.`,
-            variant: "destructive",
-        });
-        setEscalation(prev => prev ? { ...prev, currentIndex: nextIndex, timer: ESCALATION_TIMEOUT } : null);
-    } else {
-        setAlertStatus("idle");
-        setEscalation(null);
-        setLocation(null);
-        setFallTimestamp(null);
-        toast({
-            title: "No Response",
-            description: "No caregivers responded to the alert.",
-            variant: "destructive",
-        });
-    }
+  
+    const nextIndex = (escalation.currentIndex + 1) % escalation.path.length;
+    const nextCaregiverIndex = escalation.path[nextIndex];
+  
+    notifyCaregiver(nextCaregiverIndex, fallSeverity);
+  
+    const isLooping = nextIndex < escalation.currentIndex;
+  
+    toast({
+      title: isLooping ? "Restarting Alert Cycle" : "Alert Escalated",
+      description: `No response. Notifying ${isLooping ? 'first' : 'next'} caregiver.`,
+      variant: "destructive",
+    });
+  
+    setEscalation((prev) => (prev ? { ...prev, currentIndex: nextIndex, timer: ESCALATION_TIMEOUT } : null));
   }, [escalation, fallSeverity, notifyCaregiver, toast]);
 
   useInterval(handleEscalation, isTimerRunning ? 1000 : null);
@@ -141,13 +134,21 @@ const GuardianAngelPage: FC = () => {
 
   const handleSimulateFall = async (severity: FallSeverity) => {
     resetAlert();
+
+    // Regenerate caregiver locations for each simulation
+    const updatedCaregivers = caregivers.map(c => ({
+        ...c,
+        location: getRandomLocation()
+    }));
+    setCaregivers(updatedCaregivers);
+
     const newLocation = getRandomLocation();
     setLocation(newLocation);
     setFallTimestamp(new Date());
     setAlertStatus('pending');
     setFallSeverity(severity);
     
-    const availableCaregivers = caregivers.filter(c => c.isAvailable);
+    const availableCaregivers = updatedCaregivers.filter(c => c.isAvailable);
     if (availableCaregivers.length === 0) {
         toast({
             title: "Simulation Failed",
@@ -160,9 +161,9 @@ const GuardianAngelPage: FC = () => {
     
     try {
       const result = await determineAlertEscalation({
-        caregiverAvailability: caregivers.map(c => c.isAvailable),
-        caregiverLocations: caregivers.map(c => c.location),
-        historicalResponseTimes: caregivers.map(c => c.historicalResponseTime),
+        caregiverAvailability: updatedCaregivers.map(c => c.isAvailable),
+        caregiverLocations: updatedCaregivers.map(c => c.location),
+        historicalResponseTimes: updatedCaregivers.map(c => c.historicalResponseTime),
         fallLocation: newLocation,
         fallSeverity: severity,
         escalationTimeout: ESCALATION_TIMEOUT,
