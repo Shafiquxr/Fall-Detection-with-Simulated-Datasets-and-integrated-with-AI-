@@ -1,8 +1,9 @@
+
 'use client'
 
 import type { FC, Dispatch, SetStateAction } from 'react';
 import React, { useState } from 'react';
-import { Phone, MessageSquare, Bell, User, Users, ChevronDown } from 'lucide-react';
+import { Phone, MessageSquare, Bell, User, Users, Edit } from 'lucide-react';
 import type { Caregiver, FallSeverity } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -17,8 +18,79 @@ import {
 } from "@/components/ui/select";
 import { Badge } from '@/components/ui/badge';
 import { Separator } from './ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 
-const CaregiverCard: FC<{ caregiver: Caregiver; onAvailabilityChange: (id: string, isAvailable: boolean) => void; isAlertActive: boolean }> = ({ caregiver, onAvailabilityChange, isAlertActive }) => (
+interface CaregiverManagerProps {
+    caregivers: Caregiver[];
+    setCaregivers: Dispatch<SetStateAction<Caregiver[]>>;
+    onSimulateFall: (severity: FallSeverity) => void;
+    isAlertActive: boolean;
+}
+
+const EditCaregiverForm: FC<{ caregiver: Caregiver, onSave: (updatedCaregiver: Caregiver) => void, children: React.ReactNode }> = ({ caregiver, onSave, children }) => {
+    const [editedCaregiver, setEditedCaregiver] = useState(caregiver);
+    const [open, setOpen] = useState(false);
+
+    const handleSave = () => {
+        onSave(editedCaregiver);
+        setOpen(false);
+    }
+    
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                {children}
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit Caregiver</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="name">Name</Label>
+                        <Input id="name" value={editedCaregiver.name} onChange={(e) => setEditedCaregiver({...editedCaregiver, name: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="phoneNumber">Phone Number</Label>
+                        <Input id="phoneNumber" value={editedCaregiver.phoneNumber} onChange={(e) => setEditedCaregiver({...editedCaregiver, phoneNumber: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="responseTime">Historical Response Time (s)</Label>
+                        <Input id="responseTime" type="number" value={editedCaregiver.historicalResponseTime} onChange={(e) => setEditedCaregiver({...editedCaregiver, historicalResponseTime: parseInt(e.target.value) || 0 })} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Contact Methods</Label>
+                        <div className="flex items-center space-x-4">
+                            <div className="flex items-center space-x-2">
+                                <Checkbox id="sms" checked={editedCaregiver.contactMethods.sms} onCheckedChange={(checked) => setEditedCaregiver({...editedCaregiver, contactMethods: {...editedCaregiver.contactMethods, sms: !!checked}})} />
+                                <Label htmlFor="sms">SMS</Label>
+                            </div>
+                             <div className="flex items-center space-x-2">
+                                <Checkbox id="call" checked={editedCaregiver.contactMethods.call} onCheckedChange={(checked) => setEditedCaregiver({...editedCaregiver, contactMethods: {...editedCaregiver.contactMethods, call: !!checked}})} />
+                                <Label htmlFor="call">Call</Label>
+                            </div>
+                             <div className="flex items-center space-x-2">
+                                <Checkbox id="app" checked={editedCaregiver.contactMethods.app} onCheckedChange={(checked) => setEditedCaregiver({...editedCaregiver, contactMethods: {...editedCaregiver.contactMethods, app: !!checked}})} />
+                                <Label htmlFor="app">App</Label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button onClick={handleSave}>Save Changes</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+const CaregiverCard: FC<{ caregiver: Caregiver; onAvailabilityChange: (id: string, isAvailable: boolean) => void; isAlertActive: boolean; onCaregiverUpdate: (caregiver: Caregiver) => void }> = ({ caregiver, onAvailabilityChange, isAlertActive, onCaregiverUpdate }) => (
     <div className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-colors">
         <div className="flex items-center gap-4">
             <Avatar className="h-12 w-12">
@@ -35,17 +107,22 @@ const CaregiverCard: FC<{ caregiver: Caregiver; onAvailabilityChange: (id: strin
                 {caregiver.phoneNumber && <p className="text-xs text-muted-foreground">{caregiver.phoneNumber}</p>}
             </div>
         </div>
-        <div className="flex flex-col items-end gap-2">
-            <Switch
-                id={`availability-${caregiver.id}`}
-                checked={caregiver.isAvailable}
-                onCheckedChange={(checked) => onAvailabilityChange(caregiver.id, checked)}
-                disabled={isAlertActive}
-                aria-label={`${caregiver.name}'s availability`}
-            />
-             <Badge variant={caregiver.isAvailable ? "default" : "secondary"} className={`transition-colors ${caregiver.isAvailable ? 'bg-accent text-accent-foreground' : ''}`}>
-                {caregiver.isAvailable ? 'Available' : 'Away'}
-            </Badge>
+        <div className="flex items-center gap-2">
+             <EditCaregiverForm caregiver={caregiver} onSave={onCaregiverUpdate}>
+                <Button variant="ghost" size="icon" disabled={isAlertActive}><Edit className="h-4 w-4"/></Button>
+            </EditCaregiverForm>
+            <div className="flex flex-col items-end gap-2">
+                <Switch
+                    id={`availability-${caregiver.id}`}
+                    checked={caregiver.isAvailable}
+                    onCheckedChange={(checked) => onAvailabilityChange(caregiver.id, checked)}
+                    disabled={isAlertActive}
+                    aria-label={`${caregiver.name}'s availability`}
+                />
+                 <Badge variant={caregiver.isAvailable ? "default" : "secondary"} className={`transition-colors text-xs ${caregiver.isAvailable ? 'bg-accent text-accent-foreground' : ''}`}>
+                    {caregiver.isAvailable ? 'Available' : 'Away'}
+                </Badge>
+            </div>
         </div>
     </div>
 );
@@ -56,6 +133,10 @@ export const CaregiverManager: FC<CaregiverManagerProps> = ({ caregivers, setCar
 
   const handleAvailabilityChange = (id: string, isAvailable: boolean) => {
     setCaregivers(prev => prev.map(c => c.id === id ? { ...c, isAvailable } : c));
+  };
+  
+  const handleCaregiverUpdate = (updatedCaregiver: Caregiver) => {
+    setCaregivers(prev => prev.map(c => c.id === updatedCaregiver.id ? updatedCaregiver : c));
   };
   
   return (
@@ -75,6 +156,7 @@ export const CaregiverManager: FC<CaregiverManagerProps> = ({ caregivers, setCar
                     caregiver={caregiver} 
                     onAvailabilityChange={handleAvailabilityChange}
                     isAlertActive={isAlertActive}
+                    onCaregiverUpdate={handleCaregiverUpdate}
                 />
             ))}
         </div>

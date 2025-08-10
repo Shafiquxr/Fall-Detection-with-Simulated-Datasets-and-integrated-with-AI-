@@ -2,7 +2,7 @@
 'use client';
 
 import type { FC } from 'react';
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { determineAlertEscalation } from '@/ai/flows/alert-escalation-determination';
 import type { Caregiver, FallSeverity, AlertStatus, Escalation } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
@@ -20,8 +20,6 @@ const initialCaregivers: Caregiver[] = [
   { id: '3', name: 'Chloe Decker', phoneNumber: '+13235555678', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "woman face", isAvailable: false, contactMethods: { sms: true, call: false, app: true }, historicalResponseTime: 45 },
   { id: '4', name: 'Ben Carter', phoneNumber: '+12125559876', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "man face", isAvailable: true, contactMethods: { sms: true, call: true, app: false }, historicalResponseTime: 90 },
   { id: '5', name: 'Dr. Evelyn Reed', phoneNumber: '+442079460958', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "woman doctor", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 25 },
-  { id: '6', name: 'Ken Adams', phoneNumber: '+17865554321', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "man smiling", isAvailable: false, contactMethods: { sms: false, call: false, app: true }, historicalResponseTime: 120 },
-  { id: '7', name: 'Lakshmi Patel', phoneNumber: '+919876543210', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "indian woman", isAvailable: true, contactMethods: { sms: true, call: false, app: false }, historicalResponseTime: 55 },
 ];
 
 const ESCALATION_TIMEOUT = 9; // seconds
