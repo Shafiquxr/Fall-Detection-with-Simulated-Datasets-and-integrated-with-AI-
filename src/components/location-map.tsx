@@ -25,7 +25,7 @@ export const LocationMap: FC = () => {
             <WifiOff className="w-12 h-12 text-muted-foreground mb-4" />
             <h3 className="font-semibold text-lg">Map Unavailable</h3>
             <p className="text-sm text-muted-foreground max-w-xs">
-              Google Maps API key is not configured. Please add it to your environment variables to display the map.
+             Last known coordinates: {position.lat}, {position.lng}
             </p>
           </div>
         </CardContent>
