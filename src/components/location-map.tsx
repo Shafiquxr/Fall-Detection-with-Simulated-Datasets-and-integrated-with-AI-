@@ -1,8 +1,9 @@
 'use client';
 
 import type { FC } from 'react';
+import Image from 'next/image';
 import { APIProvider, Map, Marker } from '@vis.gl/react-google-maps';
-import { MapPin, WifiOff } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const LocationMap: FC = () => {
@@ -10,53 +11,57 @@ export const LocationMap: FC = () => {
   // Default position: San Francisco, CA
   const position = { lat: 37.7749, lng: -122.4194 };
 
-  if (!apiKey) {
-    return (
-        <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="w-6 h-6" />
-            <span>Last Known Location</span>
-          </CardTitle>
-          <CardDescription>User's location based on the wearable device.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center h-[350px] bg-muted rounded-lg p-8 text-center">
-            <WifiOff className="w-12 h-12 text-muted-foreground mb-4" />
-            <h3 className="font-semibold text-lg">Map Unavailable</h3>
-            <p className="text-sm text-muted-foreground max-w-xs">
-             Last known coordinates: {position.lat}, {position.lng}
+  const StaticMapFallback = () => (
+    <div className="h-[350px] w-full rounded-lg overflow-hidden border relative">
+      <Image 
+        src={`https://placehold.co/800x400.png`}
+        alt="Static map placeholder"
+        layout="fill"
+        objectFit="cover"
+        data-ai-hint="map city"
+      />
+      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+        <div className="p-4 rounded-lg bg-background/80 text-center">
+            <h3 className="font-semibold text-lg">Map Preview</h3>
+            <p className="text-sm text-muted-foreground">
+                Last known coordinates: {position.lat.toFixed(4)}, {position.lng.toFixed(4)}
             </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+             <p className="text-xs text-muted-foreground/80 mt-2">
+                (Add a Google Maps API key for a live map)
+            </p>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
-    <APIProvider apiKey={apiKey}>
-        <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="w-6 h-6" />
-            <span>Last Known Location</span>
-          </CardTitle>
-          <CardDescription>User's location based on the wearable device.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[350px] w-full rounded-lg overflow-hidden border">
-            <Map
-              defaultCenter={position}
-              defaultZoom={14}
-              mapId="guardian-angel-map-1"
-              gestureHandling={'greedy'}
-              disableDefaultUI={true}
-            >
-              <Marker position={position} />
-            </Map>
-          </div>
-        </CardContent>
-      </Card>
-    </APIProvider>
+    <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <MapPin className="w-6 h-6" />
+          <span>Last Known Location</span>
+        </CardTitle>
+        <CardDescription>User's location based on the wearable device.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {apiKey ? (
+          <APIProvider apiKey={apiKey}>
+            <div className="h-[350px] w-full rounded-lg overflow-hidden border">
+              <Map
+                defaultCenter={position}
+                defaultZoom={14}
+                mapId="guardian-angel-map-1"
+                gestureHandling={'greedy'}
+                disableDefaultUI={true}
+              >
+                <Marker position={position} />
+              </Map>
+            </div>
+          </APIProvider>
+        ) : (
+          <StaticMapFallback />
+        )}
+      </CardContent>
+    </Card>
   );
 };
