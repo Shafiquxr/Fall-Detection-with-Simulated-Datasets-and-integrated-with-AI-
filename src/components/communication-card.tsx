@@ -2,6 +2,7 @@
 'use client'
 
 import type { FC } from 'react';
+import React from 'react';
 import { Phone, PhoneOff, Mic, MicOff, PhoneIncoming, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
