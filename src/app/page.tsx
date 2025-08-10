@@ -6,6 +6,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { determineAlertEscalation } from '@/ai/flows/alert-escalation-determination';
 import type { Caregiver, FallSeverity, AlertStatus, Escalation } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
+import { useInterval } from "@/hooks/use-interval";
 import { CaregiverManager } from '@/components/caregiver-manager';
 import { AlertStatusCard } from '@/components/alert-status-card';
 import { LocationMap } from '@/components/location-map';
@@ -28,35 +29,8 @@ const GuardianAngelPage: FC = () => {
   const [escalation, setEscalation] = useState<Escalation | null>(null);
   const [fallSeverity, setFallSeverity] = useState<FallSeverity | null>(null);
   const { toast } = useToast();
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const stopTimer = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-  }, []);
-
-  const resetAlert = useCallback(() => {
-    stopTimer();
-    setAlertStatus("idle");
-    setEscalation(null);
-    setFallSeverity(null);
-  }, [stopTimer]);
-
-  const handleAcknowledge = () => {
-    setAlertStatus("acknowledged");
-    stopTimer();
-    if (escalation) {
-        const currentCaregiver = caregivers[escalation.path[escalation.currentIndex]];
-        if (currentCaregiver) {
-            toast({
-                title: "Alert Acknowledged",
-                description: `${currentCaregiver.name} has responded.`,
-            });
-        }
-    }
-  };
+  const isTimerRunning = alertStatus === 'active' && escalation !== null;
 
   const notifyCaregiver = useCallback(async (caregiverIndex: number, severity: FallSeverity) => {
     const caregiver = caregivers[caregiverIndex];
@@ -79,51 +53,56 @@ const GuardianAngelPage: FC = () => {
     }
   }, [caregivers, toast]);
 
-  useEffect(() => {
-    if (alertStatus !== 'active' || !escalation || !fallSeverity) {
-        stopTimer();
+  const handleEscalation = useCallback(() => {
+    if (!escalation || !fallSeverity) return;
+
+    if (escalation.timer > 1) {
+        setEscalation(prev => prev ? { ...prev, timer: prev.timer - 1 } : null);
         return;
     }
 
-    if(timerRef.current) return;
-
-    timerRef.current = setInterval(() => {
-      setEscalation(prev => {
-        if (!prev) {
-            stopTimer();
-            return null;
-        }
-        if (prev.timer > 1) {
-          return { ...prev, timer: prev.timer - 1 };
-        }
-        
-        // Timer reached 0, escalate
-        const nextIndex = prev.currentIndex + 1;
-        if (nextIndex < prev.path.length) {
-          const nextCaregiverIndex = prev.path[nextIndex];
-          notifyCaregiver(nextCaregiverIndex, fallSeverity);
-          toast({
-              title: "Alert Escalated",
-              description: `No response. Notifying next caregiver.`,
-              variant: "destructive",
-          });
-          return { ...prev, currentIndex: nextIndex, timer: ESCALATION_TIMEOUT };
-        }
-        
-        // End of escalation path
-        stopTimer();
-        setAlertStatus("idle"); // Or some "unresolved" state
+    const nextIndex = escalation.currentIndex + 1;
+    if (nextIndex < escalation.path.length) {
+        const nextCaregiverIndex = escalation.path[nextIndex];
+        notifyCaregiver(nextCaregiverIndex, fallSeverity);
+        toast({
+            title: "Alert Escalated",
+            description: `No response. Notifying next caregiver.`,
+            variant: "destructive",
+        });
+        setEscalation(prev => prev ? { ...prev, currentIndex: nextIndex, timer: ESCALATION_TIMEOUT } : null);
+    } else {
+        setAlertStatus("idle");
+        setEscalation(null);
         toast({
             title: "No Response",
             description: "No caregivers responded to the alert.",
             variant: "destructive",
         });
-        return null;
-      });
-    }, 1000);
+    }
+  }, [escalation, fallSeverity, notifyCaregiver, toast]);
 
-    return () => stopTimer();
-  }, [alertStatus, escalation, toast, stopTimer, fallSeverity, notifyCaregiver]);
+  useInterval(handleEscalation, isTimerRunning ? 1000 : null);
+
+  const resetAlert = useCallback(() => {
+    setAlertStatus("idle");
+    setEscalation(null);
+    setFallSeverity(null);
+  }, []);
+
+  const handleAcknowledge = () => {
+    setAlertStatus("acknowledged");
+    if (escalation) {
+        const currentCaregiver = caregivers[escalation.path[escalation.currentIndex]];
+        if (currentCaregiver) {
+            toast({
+                title: "Alert Acknowledged",
+                description: `${currentCaregiver.name} has responded.`,
+            });
+        }
+    }
+  };
+
 
   const handleSimulateFall = async (severity: FallSeverity) => {
     resetAlert();
