@@ -29,7 +29,7 @@ const getRandomLocation = (bounds = KUNDRATHUR_SRIPERUMBUDUR_BOUNDS): Location =
 };
 
 const initialCaregivers: Caregiver[] = [
-  { id: '1', name: 'Guru Prasath A', phoneNumber: '+915642786743', avatarUrl: 'https://i.pravatar.cc/150?u=professional-woman-1', dataAiHint: "professional woman", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 30, location: getRandomLocation() },
+  { id: '1', name: 'Guru Prasath A', phoneNumber: '+915642786743', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-1', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 30, location: getRandomLocation() },
   { id: '2', name: 'Shafiqur Rahaman', phoneNumber: '+918939837897', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-4', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: false, call: true, app: true }, historicalResponseTime: 65, location: getRandomLocation() },
   { id: '3', name: 'Sham Andrew R', phoneNumber: '+916538901510', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-2', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: false }, historicalResponseTime: 90, location: getRandomLocation() },
   { id: '4', name: 'Sean Maximus J', phoneNumber: '+915368109091', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-3', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 25, location: getRandomLocation() },
