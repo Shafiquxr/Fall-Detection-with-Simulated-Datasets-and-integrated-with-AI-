@@ -1,7 +1,7 @@
 'use client'
 
 import type { FC } from 'react';
-import { ShieldCheck, ShieldAlert, UserCheck, Loader, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, UserCheck, Loader, AlertTriangle, Clock } from 'lucide-react';
 import type { AlertStatus, Caregiver, Escalation } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -12,6 +12,7 @@ interface AlertStatusCardProps {
   status: AlertStatus;
   caregiver: Caregiver | null;
   escalation: Escalation | null;
+  fallTimestamp: Date | null;
   onAcknowledge: () => void;
   onReset: () => void;
 }
@@ -60,7 +61,7 @@ const ErrorState: FC<{ onReset: () => void }> = ({ onReset }) => (
     </div>
   );
 
-const ActiveState: FC<Omit<AlertStatusCardProps, 'status' | 'onReset'>> = ({ caregiver, escalation, onAcknowledge }) => {
+const ActiveState: FC<Omit<AlertStatusCardProps, 'status' | 'onReset'>> = ({ caregiver, escalation, fallTimestamp, onAcknowledge }) => {
   if (!caregiver || !escalation) return <PendingState />;
 
   const progress = (escalation.timer / 9) * 100;
@@ -72,7 +73,15 @@ const ActiveState: FC<Omit<AlertStatusCardProps, 'status' | 'onReset'>> = ({ car
             <ShieldAlert className="w-16 h-16 text-destructive" />
         </div>
         <h3 className="text-3xl font-bold text-destructive">FALL DETECTED</h3>
-        <p className="text-muted-foreground">Notifying caregiver...</p>
+
+        {fallTimestamp && (
+            <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                <Clock className="w-4 h-4" />
+                <span>{fallTimestamp.toLocaleTimeString()}</span>
+            </div>
+        )}
+
+        <p className="text-muted-foreground">Notifying nearest caregiver...</p>
         
         <div className="flex flex-col items-center gap-4 py-6">
           <Avatar className="w-24 h-24 border-4 border-primary">

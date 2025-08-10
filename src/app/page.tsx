@@ -14,27 +14,27 @@ import { Logo } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
 import { sendNotification } from '@/services/notification-service';
 
-const initialCaregivers: Caregiver[] = [
-  { id: '1', name: 'Guru Prasath A', phoneNumber: '+915642786743', avatarUrl: 'https://i.pravatar.cc/150?u=professional-woman-1', dataAiHint: "professional woman", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 30 },
-  { id: '2', name: 'Arifa', phoneNumber: '+918939837897', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-1', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: false, call: true, app: true }, historicalResponseTime: 65 },
-  { id: '3', name: 'Sham Andrew R', phoneNumber: '+916538901510', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-2', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: false }, historicalResponseTime: 90 },
-  { id: '4', name: 'Sean Maximus J', phoneNumber: '+915368109091', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-3', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 25 },
-  { id: '5', name: 'Sanjana Umapathy', phoneNumber: '+917871015864', avatarUrl: 'https://i.pravatar.cc/150?u=professional-woman-2', dataAiHint: "professional woman", isAvailable: false, contactMethods: { sms: true, call: false, app: true }, historicalResponseTime: 45 },
-];
-
 const KUNDRATHUR_SRIPERUMBUDUR_BOUNDS = {
-  minLat: 12.96,
-  maxLat: 13.00,
-  minLng: 79.95,
-  maxLng: 80.11,
+    minLat: 12.96,
+    maxLat: 13.00,
+    minLng: 79.95,
+    maxLng: 80.11,
+};
+  
+const getRandomLocation = (bounds = KUNDRATHUR_SRIPERUMBUDUR_BOUNDS): Location => {
+    const { minLat, maxLat, minLng, maxLng } = bounds;
+    const lat = Math.random() * (maxLat - minLat) + minLat;
+    const lng = Math.random() * (maxLng - minLng) + minLng;
+    return { lat, lng };
 };
 
-const getRandomLocation = (): Location => {
-  const { minLat, maxLat, minLng, maxLng } = KUNDRATHUR_SRIPERUMBUDUR_BOUNDS;
-  const lat = Math.random() * (maxLat - minLat) + minLat;
-  const lng = Math.random() * (maxLng - minLng) + minLng;
-  return { lat, lng };
-};
+const initialCaregivers: Caregiver[] = [
+  { id: '1', name: 'Guru Prasath A', phoneNumber: '+915642786743', avatarUrl: 'https://i.pravatar.cc/150?u=professional-woman-1', dataAiHint: "professional woman", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 30, location: getRandomLocation() },
+  { id: '2', name: 'Arifa', phoneNumber: '+918939837897', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-1', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: false, call: true, app: true }, historicalResponseTime: 65, location: getRandomLocation() },
+  { id: '3', name: 'Sham Andrew R', phoneNumber: '+916538901510', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-2', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: false }, historicalResponseTime: 90, location: getRandomLocation() },
+  { id: '4', name: 'Sean Maximus J', phoneNumber: '+915368109091', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-3', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 25, location: getRandomLocation() },
+  { id: '5', name: 'Sanjana Umapathy', phoneNumber: '+917871015864', avatarUrl: 'https://i.pravatar.cc/150?u=professional-woman-2', dataAiHint: "professional woman", isAvailable: false, contactMethods: { sms: true, call: false, app: true }, historicalResponseTime: 45, location: getRandomLocation() },
+];
 
 const ESCALATION_TIMEOUT = 9; // seconds
 
@@ -44,6 +44,8 @@ const GuardianAngelPage: FC = () => {
   const [escalation, setEscalation] = useState<Escalation | null>(null);
   const [fallSeverity, setFallSeverity] = useState<FallSeverity | null>(null);
   const [location, setLocation] = useState<Location | null>(null);
+  const [fallTimestamp, setFallTimestamp] = useState<Date | null>(null);
+
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -104,6 +106,7 @@ const GuardianAngelPage: FC = () => {
         setAlertStatus("idle");
         setEscalation(null);
         setLocation(null);
+        setFallTimestamp(null);
         toast({
             title: "No Response",
             description: "No caregivers responded to the alert.",
@@ -119,6 +122,7 @@ const GuardianAngelPage: FC = () => {
     setEscalation(null);
     setFallSeverity(null);
     setLocation(null);
+    setFallTimestamp(null);
   }, []);
 
   const handleAcknowledge = () => {
@@ -139,6 +143,7 @@ const GuardianAngelPage: FC = () => {
     resetAlert();
     const newLocation = getRandomLocation();
     setLocation(newLocation);
+    setFallTimestamp(new Date());
     setAlertStatus('pending');
     setFallSeverity(severity);
     
@@ -156,7 +161,9 @@ const GuardianAngelPage: FC = () => {
     try {
       const result = await determineAlertEscalation({
         caregiverAvailability: caregivers.map(c => c.isAvailable),
+        caregiverLocations: caregivers.map(c => c.location),
         historicalResponseTimes: caregivers.map(c => c.historicalResponseTime),
+        fallLocation: newLocation,
         fallSeverity: severity,
         escalationTimeout: ESCALATION_TIMEOUT,
       });
@@ -180,7 +187,7 @@ const GuardianAngelPage: FC = () => {
       
       toast({
         title: "Fall Detected!",
-        description: `Severity: ${severity}. Notifying the first caregiver.`,
+        description: `Severity: ${severity}. Notifying the nearest caregiver.`,
       });
 
     } catch (error) {
@@ -214,10 +221,15 @@ const GuardianAngelPage: FC = () => {
               status={alertStatus} 
               caregiver={currentCaregiver}
               escalation={escalation}
+              fallTimestamp={fallTimestamp}
               onAcknowledge={handleAcknowledge}
               onReset={resetAlert}
             />
-            <LocationMap location={location} />
+            <LocationMap 
+                location={location} 
+                caregivers={caregivers.filter(c => c.isAvailable)} 
+                isAlertActive={isAlertActive}
+             />
           </div>
           <div className="lg:col-span-1 space-y-8">
             <CaregiverManager 

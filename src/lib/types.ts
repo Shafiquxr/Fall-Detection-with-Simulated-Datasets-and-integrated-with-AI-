@@ -11,6 +11,7 @@ export type Caregiver = {
   };
   historicalResponseTime: number; // in seconds
   phoneNumber?: string;
+  location: Location;
 };
 
 export type FallSeverity = "low" | "medium" | "high";
