@@ -15,8 +15,8 @@ import { Separator } from '@/components/ui/separator';
 import { sendNotification } from '@/services/notification-service';
 
 const initialCaregivers: Caregiver[] = [
-  { id: '1', name: 'Arifa', phoneNumber: '+918939837897', avatarUrl: 'https://i.pravatar.cc/150?u=professional-woman-1', dataAiHint: "professional woman", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 30 },
-  { id: '2', name: 'Guru Prasath A', phoneNumber: '+915642786743', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-1', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: false, call: true, app: true }, historicalResponseTime: 65 },
+  { id: '1', name: 'Guru Prasath A', phoneNumber: '+915642786743', avatarUrl: 'https://i.pravatar.cc/150?u=professional-woman-1', dataAiHint: "professional woman", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 30 },
+  { id: '2', name: 'Arifa', phoneNumber: '+918939837897', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-1', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: false, call: true, app: true }, historicalResponseTime: 65 },
   { id: '3', name: 'Sham Andrew R', phoneNumber: '+916538901510', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-2', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: false }, historicalResponseTime: 90 },
   { id: '4', name: 'Sean Maximus J', phoneNumber: '+915368109091', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-3', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 25 },
   { id: '5', name: 'Sanjana Umapathy', phoneNumber: '+917871015864', avatarUrl: 'https://i.pravatar.cc/150?u=professional-woman-2', dataAiHint: "professional woman", isAvailable: false, contactMethods: { sms: true, call: false, app: true }, historicalResponseTime: 45 },
