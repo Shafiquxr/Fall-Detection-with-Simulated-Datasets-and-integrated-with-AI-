@@ -167,7 +167,6 @@ const GuardianAngelPage: FC = () => {
       }
 
       const firstCaregiverIndex = result.escalationPath[0];
-      await notifyCaregiver(firstCaregiverIndex, severity);
       
       setEscalation({
         path: result.escalationPath,
@@ -175,6 +174,9 @@ const GuardianAngelPage: FC = () => {
         timer: ESCALATION_TIMEOUT,
       });
       setAlertStatus('active');
+      
+      await notifyCaregiver(firstCaregiverIndex, severity);
+      
       setTimeout(() => {
         toast({
           title: "Fall Detected!",
