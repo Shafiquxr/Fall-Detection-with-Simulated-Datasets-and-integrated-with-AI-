@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { FC } from 'react';
@@ -10,12 +11,13 @@ import { AlertStatusCard } from '@/components/alert-status-card';
 import { LocationMap } from '@/components/location-map';
 import { Logo } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
+import { sendNotification } from '@/services/notification-service';
 
 const initialCaregivers: Caregiver[] = [
   { id: '1', name: 'ARIFA', phoneNumber: '+918939837897', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "woman portrait", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 30 },
-  { id: '2', name: 'Marcus Holloway', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "man portrait", isAvailable: true, contactMethods: { sms: false, call: true, app: true }, historicalResponseTime: 65 },
-  { id: '3', name: 'Chloe Decker', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "woman face", isAvailable: false, contactMethods: { sms: true, call: false, app: true }, historicalResponseTime: 45 },
-  { id: '4', name: 'Ben Carter', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "man face", isAvailable: true, contactMethods: { sms: true, call: true, app: false }, historicalResponseTime: 90 },
+  { id: '2', name: 'Marcus Holloway', phoneNumber: '+14155551234', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "man portrait", isAvailable: true, contactMethods: { sms: false, call: true, app: true }, historicalResponseTime: 65 },
+  { id: '3', name: 'Chloe Decker', phoneNumber: '+13235555678', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "woman face", isAvailable: false, contactMethods: { sms: true, call: false, app: true }, historicalResponseTime: 45 },
+  { id: '4', name: 'Ben Carter', phoneNumber: '+12125559876', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "man face", isAvailable: true, contactMethods: { sms: true, call: true, app: false }, historicalResponseTime: 90 },
 ];
 
 const ESCALATION_TIMEOUT = 9; // seconds
@@ -24,6 +26,7 @@ const GuardianAngelPage: FC = () => {
   const [caregivers, setCaregivers] = useState<Caregiver[]>(initialCaregivers);
   const [alertStatus, setAlertStatus] = useState<AlertStatus>('idle');
   const [escalation, setEscalation] = useState<Escalation | null>(null);
+  const [fallSeverity, setFallSeverity] = useState<FallSeverity | null>(null);
   const { toast } = useToast();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -38,6 +41,7 @@ const GuardianAngelPage: FC = () => {
     stopTimer();
     setAlertStatus("idle");
     setEscalation(null);
+    setFallSeverity(null);
   }, [stopTimer]);
 
   const handleAcknowledge = () => {
@@ -51,8 +55,29 @@ const GuardianAngelPage: FC = () => {
     }
   };
 
+  const notifyCaregiver = useCallback(async (caregiverIndex: number, severity: FallSeverity) => {
+    const caregiver = caregivers[caregiverIndex];
+    if (!caregiver) return;
+    
+    toast({
+        title: "Notifying Caregiver",
+        description: `Contacting ${caregiver.name}...`,
+    });
+    
+    try {
+        await sendNotification(caregiver, severity);
+    } catch (error) {
+        console.error("Failed to send notification:", error);
+        toast({
+            title: "Notification Failed",
+            description: `Could not send notification to ${caregiver.name}.`,
+            variant: "destructive",
+        });
+    }
+  }, [caregivers, toast]);
+
   useEffect(() => {
-    if (alertStatus !== 'active' || !escalation) {
+    if (alertStatus !== 'active' || !escalation || !fallSeverity) {
         stopTimer();
         return;
     }
@@ -72,6 +97,8 @@ const GuardianAngelPage: FC = () => {
         // Timer reached 0, escalate
         const nextIndex = prev.currentIndex + 1;
         if (nextIndex < prev.path.length) {
+          const nextCaregiverIndex = prev.path[nextIndex];
+          notifyCaregiver(nextCaregiverIndex, fallSeverity);
           setTimeout(() => {
             toast({
                 title: "Alert Escalated",
@@ -97,11 +124,12 @@ const GuardianAngelPage: FC = () => {
     }, 1000);
 
     return () => stopTimer();
-  }, [alertStatus, escalation, toast, stopTimer]);
+  }, [alertStatus, escalation, toast, stopTimer, fallSeverity, notifyCaregiver]);
 
   const handleSimulateFall = async (severity: FallSeverity) => {
     resetAlert();
     setAlertStatus('pending');
+    setFallSeverity(severity);
     
     const availableCaregivers = caregivers.filter(c => c.isAvailable);
     if (availableCaregivers.length === 0) {
@@ -127,6 +155,9 @@ const GuardianAngelPage: FC = () => {
         setAlertStatus('idle');
         return;
       }
+
+      const firstCaregiverIndex = result.escalationPath[0];
+      await notifyCaregiver(firstCaregiverIndex, severity);
       
       setEscalation({
         path: result.escalationPath,
