@@ -72,22 +72,26 @@ const GuardianAngelPage: FC = () => {
         // Timer reached 0, escalate
         const nextIndex = prev.currentIndex + 1;
         if (nextIndex < prev.path.length) {
-          toast({
-            title: "Alert Escalated",
-            description: `No response. Notifying next caregiver.`,
-            variant: "destructive",
-          });
+          setTimeout(() => {
+            toast({
+                title: "Alert Escalated",
+                description: `No response. Notifying next caregiver.`,
+                variant: "destructive",
+            });
+          }, 0);
           return { ...prev, currentIndex: nextIndex, timer: ESCALATION_TIMEOUT };
         }
         
         // End of escalation path
         stopTimer();
         setAlertStatus("idle"); // Or some "unresolved" state
-        toast({
-            title: "No Response",
-            description: "No caregivers responded to the alert.",
-            variant: "destructive",
-        });
+        setTimeout(() => {
+            toast({
+                title: "No Response",
+                description: "No caregivers responded to the alert.",
+                variant: "destructive",
+            });
+        }, 0);
         return null;
       });
     }, 1000);
