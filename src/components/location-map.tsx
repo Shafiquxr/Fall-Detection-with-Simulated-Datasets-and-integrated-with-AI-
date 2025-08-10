@@ -24,7 +24,12 @@ export const LocationMap: FC = () => {
           <MapPin className="w-6 h-6" />
           <span>Last Known Location</span>
         </CardTitle>
-        <CardDescription>User's location based on the wearable device.</CardDescription>
+        <CardDescription>
+          User's location based on the wearable device. <br />
+          <span className="font-mono text-xs">
+            {position.lat.toFixed(4)}, {position.lng.toFixed(4)}
+          </span>
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-[350px] w-full rounded-lg overflow-hidden border">
