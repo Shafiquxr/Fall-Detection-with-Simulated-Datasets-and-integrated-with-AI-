@@ -15,11 +15,11 @@ import { Separator } from '@/components/ui/separator';
 import { sendNotification } from '@/services/notification-service';
 
 const initialCaregivers: Caregiver[] = [
-  { id: '1', name: 'ARIFA', phoneNumber: '+918939837897', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "woman portrait", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 30 },
-  { id: '2', name: 'Marcus Holloway', phoneNumber: '+14155551234', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "man portrait", isAvailable: true, contactMethods: { sms: false, call: true, app: true }, historicalResponseTime: 65 },
-  { id: '3', name: 'Chloe Decker', phoneNumber: '+13235555678', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "woman face", isAvailable: false, contactMethods: { sms: true, call: false, app: true }, historicalResponseTime: 45 },
-  { id: '4', name: 'Ben Carter', phoneNumber: '+12125559876', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "man face", isAvailable: true, contactMethods: { sms: true, call: true, app: false }, historicalResponseTime: 90 },
-  { id: '5', name: 'Dr. Evelyn Reed', phoneNumber: '+442079460958', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "woman doctor", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 25 },
+  { id: '1', name: 'ARIFA', phoneNumber: '+918939837897', avatarUrl: 'https://i.pravatar.cc/150?u=arifa', dataAiHint: "woman portrait", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 30 },
+  { id: '2', name: 'Marcus Holloway', phoneNumber: '+14155551234', avatarUrl: 'https://i.pravatar.cc/150?u=marcus', dataAiHint: "man portrait", isAvailable: true, contactMethods: { sms: false, call: true, app: true }, historicalResponseTime: 65 },
+  { id: '3', name: 'Chloe Decker', phoneNumber: '+13235555678', avatarUrl: 'https://i.pravatar.cc/150?u=chloe', dataAiHint: "woman face", isAvailable: false, contactMethods: { sms: true, call: false, app: true }, historicalResponseTime: 45 },
+  { id: '4', name: 'Ben Carter', phoneNumber: '+12125559876', avatarUrl: 'https://i.pravatar.cc/150?u=ben', dataAiHint: "man face", isAvailable: true, contactMethods: { sms: true, call: true, app: false }, historicalResponseTime: 90 },
+  { id: '5', name: 'Dr. Evelyn Reed', phoneNumber: '+442079460958', avatarUrl: 'https://i.pravatar.cc/150?u=evelyn', dataAiHint: "woman doctor", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 25 },
 ];
 
 const ESCALATION_TIMEOUT = 9; // seconds
@@ -168,7 +168,7 @@ const GuardianAngelPage: FC = () => {
           <div className="flex items-center gap-3">
             <Logo className="h-8 w-8 text-primary" />
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Guardian Angel
+              Fall Wise
             </h1>
           </div>
         </div>
@@ -200,7 +200,7 @@ const GuardianAngelPage: FC = () => {
       <footer className="container mx-auto p-4 mt-8">
           <Separator />
           <p className="text-center text-sm text-muted-foreground pt-4">
-            Guardian Angel &copy; {new Date().getFullYear()} - Your safety is our priority.
+            Fall Wise &copy; {new Date().getFullYear()} - Your safety is our priority.
           </p>
       </footer>
     </div>
