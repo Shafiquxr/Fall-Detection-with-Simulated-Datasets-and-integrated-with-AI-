@@ -48,10 +48,12 @@ const GuardianAngelPage: FC = () => {
     setAlertStatus("acknowledged");
     stopTimer();
     if (escalation) {
-        toast({
-            title: "Alert Acknowledged",
-            description: `${caregivers[escalation.path[escalation.currentIndex]].name} has responded.`,
-        });
+        setTimeout(() => {
+            toast({
+                title: "Alert Acknowledged",
+                description: `${caregivers[escalation.path[escalation.currentIndex]].name} has responded.`,
+            });
+        }, 0);
     }
   };
 
@@ -59,20 +61,24 @@ const GuardianAngelPage: FC = () => {
     const caregiver = caregivers[caregiverIndex];
     if (!caregiver) return;
     
-    toast({
-        title: "Notifying Caregiver",
-        description: `Contacting ${caregiver.name}...`,
-    });
+    setTimeout(() => {
+        toast({
+            title: "Notifying Caregiver",
+            description: `Contacting ${caregiver.name}...`,
+        });
+    }, 0);
     
     try {
         await sendNotification(caregiver, severity);
     } catch (error) {
         console.error("Failed to send notification:", error);
-        toast({
-            title: "Notification Failed",
-            description: `Could not send notification to ${caregiver.name}.`,
-            variant: "destructive",
-        });
+        setTimeout(() => {
+            toast({
+                title: "Notification Failed",
+                description: `Could not send notification to ${caregiver.name}.`,
+                variant: "destructive",
+            });
+        }, 0);
     }
   }, [caregivers, toast]);
 
@@ -133,11 +139,13 @@ const GuardianAngelPage: FC = () => {
     
     const availableCaregivers = caregivers.filter(c => c.isAvailable);
     if (availableCaregivers.length === 0) {
-        toast({
-            title: "Simulation Failed",
-            description: "No caregivers are available.",
-            variant: "destructive",
-        });
+        setTimeout(() => {
+            toast({
+                title: "Simulation Failed",
+                description: "No caregivers are available.",
+                variant: "destructive",
+            });
+        }, 0);
         setAlertStatus('idle');
         return;
     }
@@ -151,7 +159,9 @@ const GuardianAngelPage: FC = () => {
       });
 
       if (!result.escalationPath || result.escalationPath.length === 0) {
-        toast({ title: "Simulation Error", description: "Could not determine an escalation path. Are any caregivers available?", variant: "destructive" });
+        setTimeout(() => {
+          toast({ title: "Simulation Error", description: "Could not determine an escalation path. Are any caregivers available?", variant: "destructive" });
+        }, 0);
         setAlertStatus('idle');
         return;
       }
@@ -165,14 +175,18 @@ const GuardianAngelPage: FC = () => {
         timer: ESCALATION_TIMEOUT,
       });
       setAlertStatus('active');
-      toast({
-        title: "Fall Detected!",
-        description: `Severity: ${severity}. Notifying the first caregiver.`,
-      });
+      setTimeout(() => {
+        toast({
+          title: "Fall Detected!",
+          description: `Severity: ${severity}. Notifying the first caregiver.`,
+        });
+      }, 0);
 
     } catch (error) {
       console.error("Error determining escalation path:", error);
-      toast({ title: "AI Error", description: "The AI model failed to determine an escalation path.", variant: "destructive" });
+      setTimeout(() => {
+        toast({ title: "AI Error", description: "The AI model failed to determine an escalation path.", variant: "destructive" });
+      }, 0);
       setAlertStatus('error');
     }
   };
