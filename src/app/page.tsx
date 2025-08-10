@@ -15,11 +15,11 @@ import { Separator } from '@/components/ui/separator';
 import { sendNotification } from '@/services/notification-service';
 
 const initialCaregivers: Caregiver[] = [
-  { id: '1', name: 'ARIFA', phoneNumber: '+918939837897', avatarUrl: 'https://i.pravatar.cc/150?u=arifa', dataAiHint: "woman portrait", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 30 },
-  { id: '2', name: 'Marcus Holloway', phoneNumber: '+14155551234', avatarUrl: 'https://i.pravatar.cc/150?u=marcus', dataAiHint: "man portrait", isAvailable: true, contactMethods: { sms: false, call: true, app: true }, historicalResponseTime: 65 },
-  { id: '3', name: 'Chloe Decker', phoneNumber: '+13235555678', avatarUrl: 'https://i.pravatar.cc/150?u=chloe', dataAiHint: "woman face", isAvailable: false, contactMethods: { sms: true, call: false, app: true }, historicalResponseTime: 45 },
-  { id: '4', name: 'Ben Carter', phoneNumber: '+12125559876', avatarUrl: 'https://i.pravatar.cc/150?u=ben', dataAiHint: "man face", isAvailable: true, contactMethods: { sms: true, call: true, app: false }, historicalResponseTime: 90 },
-  { id: '5', name: 'Dr. Evelyn Reed', phoneNumber: '+442079460958', avatarUrl: 'https://i.pravatar.cc/150?u=evelyn', dataAiHint: "woman doctor", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 25 },
+  { id: '1', name: 'ARIFA', phoneNumber: '+918939837897', avatarUrl: 'https://i.pravatar.cc/150?u=professional-woman-1', dataAiHint: "professional woman", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 30 },
+  { id: '2', name: 'Marcus Holloway', phoneNumber: '+14155551234', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-1', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: false, call: true, app: true }, historicalResponseTime: 65 },
+  { id: '3', name: 'Chloe Decker', phoneNumber: '+13235555678', avatarUrl: 'https://i.pravatar.cc/150?u=professional-woman-2', dataAiHint: "professional woman", isAvailable: false, contactMethods: { sms: true, call: false, app: true }, historicalResponseTime: 45 },
+  { id: '4', name: 'Ben Carter', phoneNumber: '+12125559876', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-2', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: false }, historicalResponseTime: 90 },
+  { id: '5', name: 'Dr. Evelyn Reed', phoneNumber: '+442079460958', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-3', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 25 },
 ];
 
 const ESCALATION_TIMEOUT = 9; // seconds
