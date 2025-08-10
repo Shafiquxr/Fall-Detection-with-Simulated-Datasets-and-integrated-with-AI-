@@ -20,5 +20,4 @@ export type Escalation = {
   path: number[];
   currentIndex: number;
   timer: number;
-  timerId: NodeJS.Timeout | null;
 };

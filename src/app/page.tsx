@@ -1,7 +1,7 @@
 'use client';
 
 import type { FC } from 'react';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { determineAlertEscalation } from '@/ai/flows/alert-escalation-determination';
 import type { Caregiver, FallSeverity, AlertStatus, Escalation } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
@@ -25,32 +25,46 @@ const GuardianAngelPage: FC = () => {
   const [alertStatus, setAlertStatus] = useState<AlertStatus>('idle');
   const [escalation, setEscalation] = useState<Escalation | null>(null);
   const { toast } = useToast();
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const stopTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
 
   const resetAlert = useCallback(() => {
-    if (escalation?.timerId) {
-      clearInterval(escalation.timerId);
-    }
+    stopTimer();
     setAlertStatus("idle");
     setEscalation(null);
-  }, [escalation?.timerId]);
+  }, [stopTimer]);
 
   const handleAcknowledge = () => {
     setAlertStatus("acknowledged");
-    if (escalation?.timerId) {
-      clearInterval(escalation.timerId);
+    stopTimer();
+    if (escalation) {
+        toast({
+            title: "Alert Acknowledged",
+            description: `${caregivers[escalation.path[escalation.currentIndex]].name} has responded.`,
+        });
     }
-    toast({
-        title: "Alert Acknowledged",
-        description: `${caregivers[escalation!.path[escalation!.currentIndex]].name} has responded.`,
-    });
   };
 
   useEffect(() => {
-    if (alertStatus !== 'active' || !escalation || escalation.timerId) return;
+    if (alertStatus !== 'active' || !escalation) {
+        stopTimer();
+        return;
+    }
 
-    const timerId = setInterval(() => {
+    if(timerRef.current) return;
+
+    timerRef.current = setInterval(() => {
       setEscalation(prev => {
-        if (!prev) return null;
+        if (!prev) {
+            stopTimer();
+            return null;
+        }
         if (prev.timer > 1) {
           return { ...prev, timer: prev.timer - 1 };
         }
@@ -67,7 +81,7 @@ const GuardianAngelPage: FC = () => {
         }
         
         // End of escalation path
-        if(prev.timerId) clearInterval(prev.timerId);
+        stopTimer();
         setAlertStatus("idle"); // Or some "unresolved" state
         toast({
             title: "No Response",
@@ -78,12 +92,11 @@ const GuardianAngelPage: FC = () => {
       });
     }, 1000);
 
-    setEscalation(prev => prev ? { ...prev, timerId } : null);
-
-    return () => clearInterval(timerId);
-  }, [alertStatus, caregivers, escalation, toast]);
+    return () => stopTimer();
+  }, [alertStatus, escalation, toast, stopTimer]);
 
   const handleSimulateFall = async (severity: FallSeverity) => {
+    resetAlert();
     setAlertStatus('pending');
     
     const availableCaregivers = caregivers.filter(c => c.isAvailable);
@@ -115,7 +128,6 @@ const GuardianAngelPage: FC = () => {
         path: result.escalationPath,
         currentIndex: 0,
         timer: ESCALATION_TIMEOUT,
-        timerId: null,
       });
       setAlertStatus('active');
       toast({
