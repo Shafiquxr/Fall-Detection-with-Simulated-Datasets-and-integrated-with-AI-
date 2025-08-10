@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export const LocationMap: FC = () => {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   // Default position: San Francisco, CA
-  const position = { lat: 37.7749, lng: -122.4194 };
+  const position = { lat: 12.9716, lng: 80.0431 };
 
   const StaticMapFallback = () => (
     <div className="h-[350px] w-full rounded-lg overflow-hidden border relative">

@@ -18,13 +18,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from './ui/separator';
 
-interface CaregiverManagerProps {
-  caregivers: Caregiver[];
-  setCaregivers: Dispatch<SetStateAction<Caregiver[]>>;
-  onSimulateFall: (severity: FallSeverity) => void;
-  isAlertActive: boolean;
-}
-
 const CaregiverCard: FC<{ caregiver: Caregiver; onAvailabilityChange: (id: string, isAvailable: boolean) => void; isAlertActive: boolean }> = ({ caregiver, onAvailabilityChange, isAlertActive }) => (
     <div className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-colors">
         <div className="flex items-center gap-4">
@@ -39,6 +32,7 @@ const CaregiverCard: FC<{ caregiver: Caregiver; onAvailabilityChange: (id: strin
                     {caregiver.contactMethods.sms && <MessageSquare className="h-4 w-4" />}
                     {caregiver.contactMethods.app && <Bell className="h-4 w-4" />}
                 </div>
+                {caregiver.phoneNumber && <p className="text-xs text-muted-foreground">{caregiver.phoneNumber}</p>}
             </div>
         </div>
         <div className="flex flex-col items-end gap-2">

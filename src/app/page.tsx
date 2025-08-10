@@ -12,7 +12,7 @@ import { Logo } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
 
 const initialCaregivers: Caregiver[] = [
-  { id: '1', name: 'Eleanor Vance', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "woman portrait", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 30 },
+  { id: '1', name: 'ARIFA', phoneNumber: '+918939837897', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "woman portrait", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 30 },
   { id: '2', name: 'Marcus Holloway', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "man portrait", isAvailable: true, contactMethods: { sms: false, call: true, app: true }, historicalResponseTime: 65 },
   { id: '3', name: 'Chloe Decker', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "woman face", isAvailable: false, contactMethods: { sms: true, call: false, app: true }, historicalResponseTime: 45 },
   { id: '4', name: 'Ben Carter', avatarUrl: 'https://placehold.co/100x100.png', dataAiHint: "man face", isAvailable: true, contactMethods: { sms: true, call: true, app: false }, historicalResponseTime: 90 },

@@ -10,6 +10,7 @@ export type Caregiver = {
     app: boolean;
   };
   historicalResponseTime: number; // in seconds
+  phoneNumber?: string;
 };
 
 export type FallSeverity = "low" | "medium" | "high";
