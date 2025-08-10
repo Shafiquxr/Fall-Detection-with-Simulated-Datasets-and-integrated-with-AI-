@@ -4,7 +4,7 @@
 import type { FC } from 'react';
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { determineAlertEscalation } from '@/ai/flows/alert-escalation-determination';
-import type { Caregiver, FallSeverity, AlertStatus, Escalation, Location } from '@/lib/types';
+import type { Caregiver, FallSeverity, AlertStatus, Escalation, Location, CommunicationStatus } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import { useInterval } from "@/hooks/use-interval";
 import { CaregiverManager } from '@/components/caregiver-manager';
@@ -13,6 +13,7 @@ import { LocationMap } from '@/components/location-map';
 import { Logo } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
 import { sendNotification } from '@/services/notification-service';
+import { CommunicationCard } from '@/components/communication-card';
 
 const KUNDRATHUR_SRIPERUMBUDUR_BOUNDS = {
     minLat: 12.96,
@@ -41,6 +42,7 @@ const ESCALATION_TIMEOUT = 9; // seconds
 const GuardianAngelPage: FC = () => {
   const [caregivers, setCaregivers] = useState<Caregiver[]>(initialCaregivers);
   const [alertStatus, setAlertStatus] = useState<AlertStatus>('idle');
+  const [communicationStatus, setCommunicationStatus] = useState<CommunicationStatus>('idle');
   const [escalation, setEscalation] = useState<Escalation | null>(null);
   const [fallSeverity, setFallSeverity] = useState<FallSeverity | null>(null);
   const [location, setLocation] = useState<Location | null>(null);
@@ -112,6 +114,7 @@ const GuardianAngelPage: FC = () => {
 
   const resetAlert = useCallback(() => {
     setAlertStatus("idle");
+    setCommunicationStatus("idle");
     setEscalation(null);
     setFallSeverity(null);
     setLocation(null);
@@ -120,6 +123,7 @@ const GuardianAngelPage: FC = () => {
 
   const handleAcknowledge = () => {
     setAlertStatus("acknowledged");
+    setCommunicationStatus('calling');
     if (escalation) {
         const currentCaregiver = caregivers[escalation.path[escalation.currentIndex]];
         if (currentCaregiver) {
@@ -200,6 +204,7 @@ const GuardianAngelPage: FC = () => {
 
   const isAlertActive = alertStatus === 'active' || alertStatus === 'pending' || alertStatus === 'acknowledged';
   const currentCaregiver = escalation ? caregivers[escalation.path[escalation.currentIndex]] : null;
+  const showCommunicationCard = alertStatus === 'acknowledged' && communicationStatus !== 'ended' && currentCaregiver;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -218,14 +223,27 @@ const GuardianAngelPage: FC = () => {
       <main className="container mx-auto p-4 md:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           <div className="lg:col-span-2 space-y-8">
-            <AlertStatusCard 
-              status={alertStatus} 
-              caregiver={currentCaregiver}
-              escalation={escalation}
-              fallTimestamp={fallTimestamp}
-              onAcknowledge={handleAcknowledge}
-              onReset={resetAlert}
-            />
+            {showCommunicationCard ? (
+                <CommunicationCard
+                    caregiver={currentCaregiver}
+                    status={communicationStatus}
+                    onAccept={() => setCommunicationStatus('active')}
+                    onEnd={() => {
+                        setCommunicationStatus('ended');
+                        resetAlert();
+                        toast({ title: "Call Ended", description: "The incident has been resolved."});
+                    }}
+                />
+            ) : (
+                <AlertStatusCard 
+                status={alertStatus} 
+                caregiver={currentCaregiver}
+                escalation={escalation}
+                fallTimestamp={fallTimestamp}
+                onAcknowledge={handleAcknowledge}
+                onReset={resetAlert}
+                />
+            )}
             <LocationMap 
                 location={location} 
                 caregivers={caregivers.filter(c => c.isAvailable)} 
@@ -254,11 +272,3 @@ const GuardianAngelPage: FC = () => {
 };
 
 export default GuardianAngelPage;
-
-    
-
-    
-
-    
-
-    

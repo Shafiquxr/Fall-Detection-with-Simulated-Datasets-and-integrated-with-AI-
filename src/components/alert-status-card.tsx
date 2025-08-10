@@ -43,10 +43,9 @@ const AcknowledgedState: FC<{ caregiver: Caregiver | null; onReset: () => void }
     <h3 className="text-2xl font-semibold">Alert Acknowledged</h3>
     {caregiver && (
       <p className="text-muted-foreground max-w-sm">
-        {caregiver.name} has responded to the alert.
+        {caregiver.name} has responded and is initiating contact.
       </p>
     )}
-    <Button onClick={onReset} variant="outline">Reset System</Button>
   </div>
 );
 
