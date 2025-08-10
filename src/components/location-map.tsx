@@ -3,10 +3,17 @@
 import type { FC } from 'react';
 import { MapPin } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import type { Location } from '@/lib/types';
 
-export const LocationMap: FC = () => {
-  // Default position: Chennai, India
-  const position = { lat: 12.9716, lng: 80.0431 };
+interface LocationMapProps {
+  location: Location | null;
+}
+
+const DEFAULT_LOCATION = { lat: 12.985, lng: 80.03 }; // Centered between Kundrathur and Sriperumbudur
+
+export const LocationMap: FC<LocationMapProps> = ({ location }) => {
+  const position = location || DEFAULT_LOCATION;
+  const isFallDetected = !!location;
 
   const boundingBox = {
     minLng: position.lng - 0.01,
@@ -15,17 +22,17 @@ export const LocationMap: FC = () => {
     maxLat: position.lat + 0.01,
   };
 
-  const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${boundingBox.minLng}%2C${boundingBox.minLat}%2C${boundingBox.maxLng}%2C${boundingBox.maxLat}&layer=mapnik&marker=${position.lat}%2C${position.lng}`;
+  const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${boundingBox.minLng}%2C${boundingBox.minLat}%2C${boundingBox.maxLng}%2C${boundingBox.maxLat}&layer=mapnik${isFallDetected ? `&marker=${position.lat}%2C${position.lng}`: ''}`;
 
   return (
     <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MapPin className="w-6 h-6" />
-          <span>Last Known Location</span>
+          <span>{isFallDetected ? 'Fall Detected At' : 'Last Known Location'}</span>
         </CardTitle>
         <CardDescription>
-          User's location based on the wearable device. <br />
+          {isFallDetected ? "User's location at the time of the fall." : "User's location based on the wearable device."} <br />
           <span className="font-mono text-xs">
             {position.lat.toFixed(4)}, {position.lng.toFixed(4)}
           </span>

@@ -4,7 +4,7 @@
 import type { FC } from 'react';
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { determineAlertEscalation } from '@/ai/flows/alert-escalation-determination';
-import type { Caregiver, FallSeverity, AlertStatus, Escalation } from '@/lib/types';
+import type { Caregiver, FallSeverity, AlertStatus, Escalation, Location } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import { useInterval } from "@/hooks/use-interval";
 import { CaregiverManager } from '@/components/caregiver-manager';
@@ -22,6 +22,20 @@ const initialCaregivers: Caregiver[] = [
   { id: '5', name: 'Sanjana Umapathy', phoneNumber: '+917871015864', avatarUrl: 'https://i.pravatar.cc/150?u=professional-woman-2', dataAiHint: "professional woman", isAvailable: false, contactMethods: { sms: true, call: false, app: true }, historicalResponseTime: 45 },
 ];
 
+const KUNDRATHUR_SRIPERUMBUDUR_BOUNDS = {
+  minLat: 12.96,
+  maxLat: 13.00,
+  minLng: 79.95,
+  maxLng: 80.11,
+};
+
+const getRandomLocation = (): Location => {
+  const { minLat, maxLat, minLng, maxLng } = KUNDRATHUR_SRIPERUMBUDUR_BOUNDS;
+  const lat = Math.random() * (maxLat - minLat) + minLat;
+  const lng = Math.random() * (maxLng - minLng) + minLng;
+  return { lat, lng };
+};
+
 const ESCALATION_TIMEOUT = 9; // seconds
 
 const GuardianAngelPage: FC = () => {
@@ -29,6 +43,7 @@ const GuardianAngelPage: FC = () => {
   const [alertStatus, setAlertStatus] = useState<AlertStatus>('idle');
   const [escalation, setEscalation] = useState<Escalation | null>(null);
   const [fallSeverity, setFallSeverity] = useState<FallSeverity | null>(null);
+  const [location, setLocation] = useState<Location | null>(null);
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -88,6 +103,7 @@ const GuardianAngelPage: FC = () => {
     } else {
         setAlertStatus("idle");
         setEscalation(null);
+        setLocation(null);
         toast({
             title: "No Response",
             description: "No caregivers responded to the alert.",
@@ -102,6 +118,7 @@ const GuardianAngelPage: FC = () => {
     setAlertStatus("idle");
     setEscalation(null);
     setFallSeverity(null);
+    setLocation(null);
   }, []);
 
   const handleAcknowledge = () => {
@@ -120,6 +137,8 @@ const GuardianAngelPage: FC = () => {
 
   const handleSimulateFall = async (severity: FallSeverity) => {
     resetAlert();
+    const newLocation = getRandomLocation();
+    setLocation(newLocation);
     setAlertStatus('pending');
     setFallSeverity(severity);
     
@@ -198,7 +217,7 @@ const GuardianAngelPage: FC = () => {
               onAcknowledge={handleAcknowledge}
               onReset={resetAlert}
             />
-            <LocationMap />
+            <LocationMap location={location} />
           </div>
           <div className="lg:col-span-1 space-y-8">
             <CaregiverManager 

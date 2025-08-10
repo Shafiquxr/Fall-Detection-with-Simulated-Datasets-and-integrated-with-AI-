@@ -22,3 +22,8 @@ export type Escalation = {
   currentIndex: number;
   timer: number;
 };
+
+export type Location = {
+  lat: number;
+  lng: number;
+};
