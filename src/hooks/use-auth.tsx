@@ -11,6 +11,31 @@ import {
 } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import type { Caregiver } from '@/lib/types';
+
+
+const KUNDRATHUR_SRIPERUMBUDUR_BOUNDS = {
+    minLat: 12.96,
+    maxLat: 13.00,
+    minLng: 79.95,
+    maxLng: 80.11,
+};
+  
+const getRandomLocation = (bounds = KUNDRATHUR_SRIPERUMBUDUR_BOUNDS) => {
+    const { minLat, maxLat, minLng, maxLng } = bounds;
+    const lat = Math.random() * (maxLat - minLat) + minLat;
+    const lng = Math.random() * (maxLng - minLng) + minLng;
+    return { lat, lng };
+};
+
+const getInitialCaregivers = (): Omit<Caregiver, 'id'>[] => [
+    { name: 'Guru Prasath A', phoneNumber: '+915642786743', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-5', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 30, location: getRandomLocation() },
+    { name: 'Shafiqur Rahaman', phoneNumber: '+918939837897', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-4', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: false, call: true, app: true }, historicalResponseTime: 65, location: getRandomLocation() },
+    { name: 'Sham Andrew R', phoneNumber: '+916538901510', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-2', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: false }, historicalResponseTime: 90, location: getRandomLocation() },
+    { name: 'Sean Maximus J', phoneNumber: '+915368109091', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-3', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 25, location: getRandomLocation() },
+    { name: 'Sanjana Umapathy', phoneNumber: '+917871015864', avatarUrl: 'https://i.pravatar.cc/150?u=professional-woman-2', dataAiHint: "professional woman", isAvailable: false, contactMethods: { sms: true, call: false, app: true }, historicalResponseTime: 45, location: getRandomLocation() },
+];
+
 
 interface AuthContextType {
   user: User | null;
@@ -37,10 +62,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, pass: string) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
     const user = userCredential.user;
+    
+    const initialCaregivers = getInitialCaregivers().map(c => ({
+        ...c,
+        id: new Date().getTime().toString() + Math.random().toString(36).substring(2, 9),
+    }));
+
     // Create a document for the new user in Firestore
     await setDoc(doc(db, "users", user.uid), {
       email: user.email,
-      caregivers: [], // Start with an empty array of caregivers
+      caregivers: initialCaregivers,
     });
     return userCredential;
   };

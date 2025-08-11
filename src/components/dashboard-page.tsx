@@ -16,6 +16,9 @@ import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { TestTubeDiagonal } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
+import { doc, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const KUNDRATHUR_SRIPERUMBUDUR_BOUNDS = {
     minLat: 12.96,
@@ -31,19 +34,10 @@ const getRandomLocation = (bounds = KUNDRATHUR_SRIPERUMBUDUR_BOUNDS): Location =
     return { lat, lng };
 };
 
-// Note: In a real app, this would come from a database or a global state management solution
-const getInitialCaregivers = (): Caregiver[] => [
-    { id: '1', name: 'Guru Prasath A', phoneNumber: '+915642786743', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-5', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 30, location: getRandomLocation() },
-    { id: '2', name: 'Shafiqur Rahaman', phoneNumber: '+918939837897', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-4', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: false, call: true, app: true }, historicalResponseTime: 65, location: getRandomLocation() },
-    { id: '3', name: 'Sham Andrew R', phoneNumber: '+916538901510', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-2', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: false }, historicalResponseTime: 90, location: getRandomLocation() },
-    { id: '4', name: 'Sean Maximus J', phoneNumber: '+915368109091', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-3', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 25, location: getRandomLocation() },
-    { id: '5', name: 'Sanjana Umapathy', phoneNumber: '+917871015864', avatarUrl: 'https://i.pravatar.cc/150?u=professional-woman-2', dataAiHint: "professional woman", isAvailable: false, contactMethods: { sms: true, call: false, app: true }, historicalResponseTime: 45, location: getRandomLocation() },
-];
-
-
 const ESCALATION_TIMEOUT = 9; // seconds
 
 const DashboardPage: FC = () => {
+    const { user } = useAuth();
     const [caregivers, setCaregivers] = useState<Caregiver[]>([]);
     const [alertStatus, setAlertStatus] = useState<AlertStatus>('idle');
     const [communicationStatus, setCommunicationStatus] = useState<CommunicationStatus>('idle');
@@ -57,18 +51,23 @@ const DashboardPage: FC = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
 
 
-    useEffect(() => {
-        // In a real app, you would fetch this from your backend.
-        // For this demo, we'll load from a function and store in localStorage.
-        const storedCaregivers = localStorage.getItem('caregivers');
-        if (storedCaregivers) {
-            setCaregivers(JSON.parse(storedCaregivers));
-        } else {
-            const initialCaregivers = getInitialCaregivers();
-            setCaregivers(initialCaregivers);
-            localStorage.setItem('caregivers', JSON.stringify(initialCaregivers));
+  useEffect(() => {
+    let unsubscribe: Unsubscribe | undefined;
+    if (user) {
+      const userDocRef = doc(db, 'users', user.uid);
+      unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setCaregivers(data.caregivers || []);
         }
-    }, []);
+      });
+    }
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [user]);
 
 
   useEffect(() => {
@@ -85,25 +84,46 @@ const DashboardPage: FC = () => {
   const isTimerRunning = alertStatus === 'active' && escalation !== null;
 
   const notifyCaregiver = useCallback(async (caregiverIndex: number, severity: FallSeverity) => {
-    const caregiver = caregivers[caregiverIndex];
-    if (!caregiver) return;
+    const realCaregiver = caregivers.find(c => c.id === escalation?.path[caregiverIndex]);
+    if (!realCaregiver) {
+        const path = escalation?.path;
+        if(path) {
+            const caregiver = caregivers[path[caregiverIndex]];
+            if(!caregiver) return;
+            try {
+                await sendNotification(caregiver, severity);
+                toast({
+                    title: "Notifying Caregiver",
+                    description: `Contacting ${caregiver.name}...`,
+                });
+            } catch (error) {
+                console.error("Failed to send notification:", error);
+                toast({
+                    title: "Notification Failed",
+                    description: `Could not send notification to ${caregiver.name}.`,
+                    variant: "destructive",
+                });
+            }
+        }
+        return
+    };
 
     toast({
         title: "Notifying Caregiver",
-        description: `Contacting ${caregiver.name}...`,
+        description: `Contacting ${realCaregiver.name}...`,
     });
 
     try {
-        await sendNotification(caregiver, severity);
+        await sendNotification(realCaregiver, severity);
     } catch (error) {
         console.error("Failed to send notification:", error);
         toast({
             title: "Notification Failed",
-            description: `Could not send notification to ${caregiver.name}.`,
+            description: `Could not send notification to ${realCaregiver.name}.`,
             variant: "destructive",
         });
     }
-  }, [caregivers, toast]);
+  }, [caregivers, toast, escalation]);
 
   const handleEscalation = useCallback(() => {
     if (!escalation || !fallSeverity) return;
@@ -114,10 +134,9 @@ const DashboardPage: FC = () => {
     }
   
     const nextIndex = (escalation.currentIndex + 1) % escalation.path.length;
-    const nextCaregiverIndex = escalation.path[nextIndex];
-  
-    notifyCaregiver(nextCaregiverIndex, fallSeverity);
-  
+    
+    notifyCaregiver(nextIndex, fallSeverity);
+
     const isLooping = nextIndex < escalation.currentIndex;
   
     toast({
@@ -144,7 +163,7 @@ const DashboardPage: FC = () => {
     setAlertStatus("acknowledged");
     setCommunicationStatus('calling');
     if (escalation) {
-        const currentCaregiver = caregivers[escalation.path[escalation.currentIndex]];
+        const currentCaregiver = caregivers.find(c => c.id === escalation.path[escalation.currentIndex]);
         if (currentCaregiver) {
             toast({
                 title: "Alert Acknowledged",
@@ -163,8 +182,7 @@ const DashboardPage: FC = () => {
         location: getRandomLocation()
     }));
     setCaregivers(updatedCaregivers);
-    localStorage.setItem('caregivers', JSON.stringify(updatedCaregivers));
-
+    
     const newLocation = getRandomLocation();
     setLocation(newLocation);
     setFallTimestamp(new Date());
@@ -197,7 +215,7 @@ const DashboardPage: FC = () => {
         setAlertStatus('idle');
         return;
       }
-
+      
       const firstCaregiverIndex = result.escalationPath[0];
       
       setEscalation({
@@ -270,7 +288,7 @@ const DashboardPage: FC = () => {
                 <CardContent>
                     <div className="flex flex-col gap-4">
                         <Select
-                            onValueChange={(value: FallSeverity) => setSimulationSeverity(value)}
+                            onValuechange={(value: FallSeverity) => setSimulationSeverity(value)}
                             defaultValue={simulationSeverity}
                             disabled={isAlertActive}
                         >

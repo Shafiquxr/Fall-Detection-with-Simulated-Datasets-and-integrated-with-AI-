@@ -11,19 +11,6 @@ import { doc, getDoc, setDoc, onSnapshot, Unsubscribe } from 'firebase/firestore
 import { db } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 
-const getRandomLocation = (): { lat: number; lng: number } => {
-    const KUNDRATHUR_SRIPERUMBUDUR_BOUNDS = {
-        minLat: 12.96,
-        maxLat: 13.00,
-        minLng: 79.95,
-        maxLng: 80.11,
-    };
-    const { minLat, maxLat, minLng, maxLng } = KUNDRATHUR_SRIPERUMBUDUR_BOUNDS;
-    const lat = Math.random() * (maxLat - minLat) + minLat;
-    const lng = Math.random() * (maxLng - minLng) + minLng;
-    return { lat, lng };
-};
-
 const CaregiversPage: FC = () => {
   const { user } = useAuth();
   const [caregivers, setCaregivers] = useState<Caregiver[]>([]);
@@ -51,8 +38,6 @@ const CaregiversPage: FC = () => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 const caregiversFromDb = data.caregivers || [];
-                // Update local storage for dashboard page to use
-                localStorage.setItem('caregivers', JSON.stringify(caregiversFromDb));
                 setCaregivers(caregiversFromDb);
             } else {
                 console.log("No user document found!");
