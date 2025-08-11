@@ -2,10 +2,14 @@
 'use client';
 
 import type { FC } from 'react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { CaregiverManager } from '@/components/caregiver-manager';
 import type { Caregiver } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/hooks/use-auth';
+import { doc, getDoc, setDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Loader2 } from 'lucide-react';
 
 const getRandomLocation = (): { lat: number; lng: number } => {
     const KUNDRATHUR_SRIPERUMBUDUR_BOUNDS = {
@@ -20,35 +24,59 @@ const getRandomLocation = (): { lat: number; lng: number } => {
     return { lat, lng };
 };
 
-const getInitialCaregivers = (): Caregiver[] => [
-    { id: '1', name: 'Guru Prasath A', phoneNumber: '+915642786743', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-5', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 30, location: getRandomLocation() },
-    { id: '2', name: 'Shafiqur Rahaman', phoneNumber: '+918939837897', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-4', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: false, call: true, app: true }, historicalResponseTime: 65, location: getRandomLocation() },
-    { id: '3', name: 'Sham Andrew R', phoneNumber: '+916538901510', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-2', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: false }, historicalResponseTime: 90, location: getRandomLocation() },
-    { id: '4', name: 'Sean Maximus J', phoneNumber: '+915368109091', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-3', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 25, location: getRandomLocation() },
-    { id: '5', name: 'Sanjana Umapathy', phoneNumber: '+917871015864', avatarUrl: 'https://i.pravatar.cc/150?u=professional-woman-2', dataAiHint: "professional woman", isAvailable: false, contactMethods: { sms: true, call: false, app: true }, historicalResponseTime: 45, location: getRandomLocation() },
-];
-
 const CaregiversPage: FC = () => {
+  const { user } = useAuth();
   const [caregivers, setCaregivers] = useState<Caregiver[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const handleSetCaregivers = useCallback(async (newCaregivers: React.SetStateAction<Caregiver[]>) => {
+    if (!user) return;
+    
+    const caregiverResolver = (typeof newCaregivers === 'function') ? newCaregivers(caregivers) : newCaregivers;
+    
+    try {
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, { caregivers: caregiverResolver }, { merge: true });
+        // The onSnapshot listener will update the state, so we don't need to call setCaregivers here.
+    } catch (error) {
+        console.error("Error updating caregivers: ", error);
+    }
+  }, [user, caregivers]);
 
   useEffect(() => {
-    // In a real app, you would fetch this from your backend.
-    // For this demo, we'll load from a function and store in localStorage.
-    const storedCaregivers = localStorage.getItem('caregivers');
-    if (storedCaregivers) {
-      setCaregivers(JSON.parse(storedCaregivers));
+    let unsubscribe: Unsubscribe | undefined;
+    if (user) {
+        const userDocRef = doc(db, 'users', user.uid);
+        unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                const caregiversFromDb = data.caregivers || [];
+                // Update local storage for dashboard page to use
+                localStorage.setItem('caregivers', JSON.stringify(caregiversFromDb));
+                setCaregivers(caregiversFromDb);
+            } else {
+                console.log("No user document found!");
+            }
+            setIsLoading(false);
+        });
     } else {
-      const initialCaregivers = getInitialCaregivers();
-      setCaregivers(initialCaregivers);
-      localStorage.setItem('caregivers', JSON.stringify(initialCaregivers));
+        setIsLoading(false);
     }
-  }, []);
 
-  const handleSetCaregivers = (newCaregivers: React.SetStateAction<Caregiver[]>) => {
-    const updatedCaregivers = typeof newCaregivers === 'function' ? newCaregivers(caregivers) : newCaregivers;
-    setCaregivers(updatedCaregivers);
-    localStorage.setItem('caregivers', JSON.stringify(updatedCaregivers));
-  };
+    return () => {
+        if (unsubscribe) {
+            unsubscribe();
+        }
+    };
+  }, [user]);
+
+  if (isLoading) {
+    return (
+        <div className="flex items-center justify-center h-screen">
+            <Loader2 className="mr-2 h-16 w-16 animate-spin" />
+        </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">

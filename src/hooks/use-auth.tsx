@@ -7,10 +7,10 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
-  Auth,
   User,
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase'; // Ensure you have this file
+import { auth, db } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 interface AuthContextType {
   user: User | null;
@@ -34,8 +34,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const signUp = (email: string, pass: string) => {
-    return createUserWithEmailAndPassword(auth, email, pass);
+  const signUp = async (email: string, pass: string) => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+    const user = userCredential.user;
+    // Create a document for the new user in Firestore
+    await setDoc(doc(db, "users", user.uid), {
+      email: user.email,
+      caregivers: [], // Start with an empty array of caregivers
+    });
+    return userCredential;
   };
 
   const signIn = (email: string, pass: string) => {

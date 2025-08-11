@@ -1,8 +1,8 @@
 
-import { initializeApp, getApps, getApp } from 'firebase/app';
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
     apiKey: "AIzaSyBWKSOrPc577A9UwGNvHG35kKEMjdnYqwc",
     authDomain: "fallcaregiverapp.firebaseapp.com",
@@ -11,10 +11,17 @@ const firebaseConfig = {
     messagingSenderId: "316685790645",
     appId: "1:316685790645:web:63208537bcfb62a6fdbdfc",
     measurementId: "G-QJ1Q22FLQ0"
-  };
+};
 
 // Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
+let app: FirebaseApp;
+if (!getApps().length) {
+    app = initializeApp(firebaseConfig);
+} else {
+    app = getApp();
+}
 
-export { app, auth };
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+export { app, auth, db };
