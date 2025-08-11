@@ -2,18 +2,20 @@
 'use client';
 
 import type { FC } from 'react';
-import React, from 'react';
-import { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { determineAlertEscalation } from '@/ai/flows/alert-escalation-determination';
 import type { Caregiver, FallSeverity, AlertStatus, Escalation, Location, CommunicationStatus } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import { useInterval } from "@/hooks/use-interval";
-import { CaregiverManager } from '@/components/caregiver-manager';
 import { AlertStatusCard } from '@/components/alert-status-card';
 import { LocationMap } from '@/components/location-map';
 import { Separator } from '@/components/ui/separator';
 import { sendNotification } from '@/services/notification-service';
 import { CommunicationCard } from '@/components/communication-card';
+import { Button } from './ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { TestTubeDiagonal } from 'lucide-react';
 
 const KUNDRATHUR_SRIPERUMBUDUR_BOUNDS = {
     minLat: 12.96,
@@ -29,27 +31,44 @@ const getRandomLocation = (bounds = KUNDRATHUR_SRIPERUMBUDUR_BOUNDS): Location =
     return { lat, lng };
 };
 
-const initialCaregivers: Caregiver[] = [
-  { id: '1', name: 'Guru Prasath A', phoneNumber: '+915642786743', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-5', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 30, location: getRandomLocation() },
-  { id: '2', name: 'Shafiqur Rahaman', phoneNumber: '+918939837897', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-4', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: false, call: true, app: true }, historicalResponseTime: 65, location: getRandomLocation() },
-  { id: '3', name: 'Sham Andrew R', phoneNumber: '+916538901510', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-2', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: false }, historicalResponseTime: 90, location: getRandomLocation() },
-  { id: '4', name: 'Sean Maximus J', phoneNumber: '+915368109091', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-3', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 25, location: getRandomLocation() },
-  { id: '5', name: 'Sanjana Umapathy', phoneNumber: '+917871015864', avatarUrl: 'https://i.pravatar.cc/150?u=professional-woman-2', dataAiHint: "professional woman", isAvailable: false, contactMethods: { sms: true, call: false, app: true }, historicalResponseTime: 45, location: getRandomLocation() },
+// Note: In a real app, this would come from a database or a global state management solution
+const getInitialCaregivers = (): Caregiver[] => [
+    { id: '1', name: 'Guru Prasath A', phoneNumber: '+915642786743', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-5', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 30, location: getRandomLocation() },
+    { id: '2', name: 'Shafiqur Rahaman', phoneNumber: '+918939837897', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-4', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: false, call: true, app: true }, historicalResponseTime: 65, location: getRandomLocation() },
+    { id: '3', name: 'Sham Andrew R', phoneNumber: '+916538901510', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-2', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: false }, historicalResponseTime: 90, location: getRandomLocation() },
+    { id: '4', name: 'Sean Maximus J', phoneNumber: '+915368109091', avatarUrl: 'https://i.pravatar.cc/150?u=professional-man-3', dataAiHint: "professional man", isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 25, location: getRandomLocation() },
+    { id: '5', name: 'Sanjana Umapathy', phoneNumber: '+917871015864', avatarUrl: 'https://i.pravatar.cc/150?u=professional-woman-2', dataAiHint: "professional woman", isAvailable: false, contactMethods: { sms: true, call: false, app: true }, historicalResponseTime: 45, location: getRandomLocation() },
 ];
+
 
 const ESCALATION_TIMEOUT = 9; // seconds
 
 const DashboardPage: FC = () => {
-  const [caregivers, setCaregivers] = useState<Caregiver[]>(initialCaregivers);
-  const [alertStatus, setAlertStatus] = useState<AlertStatus>('idle');
-  const [communicationStatus, setCommunicationStatus] = useState<CommunicationStatus>('idle');
-  const [escalation, setEscalation] = useState<Escalation | null>(null);
-  const [fallSeverity, setFallSeverity] = useState<FallSeverity | null>(null);
-  const [location, setLocation] = useState<Location | null>(null);
-  const [fallTimestamp, setFallTimestamp] = useState<Date | null>(null);
+    const [caregivers, setCaregivers] = useState<Caregiver[]>([]);
+    const [alertStatus, setAlertStatus] = useState<AlertStatus>('idle');
+    const [communicationStatus, setCommunicationStatus] = useState<CommunicationStatus>('idle');
+    const [escalation, setEscalation] = useState<Escalation | null>(null);
+    const [fallSeverity, setFallSeverity] = useState<FallSeverity | null>(null);
+    const [location, setLocation] = useState<Location | null>(null);
+    const [fallTimestamp, setFallTimestamp] = useState<Date | null>(null);
+    const [simulationSeverity, setSimulationSeverity] = useState<FallSeverity>('medium');
 
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement>(null);
+
+
+    useEffect(() => {
+        // In a real app, you would fetch this from your backend.
+        // For this demo, we'll load from a function and store in localStorage.
+        const storedCaregivers = localStorage.getItem('caregivers');
+        if (storedCaregivers) {
+            setCaregivers(JSON.parse(storedCaregivers));
+        } else {
+            const initialCaregivers = getInitialCaregivers();
+            setCaregivers(initialCaregivers);
+            localStorage.setItem('caregivers', JSON.stringify(initialCaregivers));
+        }
+    }, []);
 
 
   useEffect(() => {
@@ -139,12 +158,12 @@ const DashboardPage: FC = () => {
   const handleSimulateFall = async (severity: FallSeverity) => {
     resetAlert();
 
-    // Regenerate caregiver locations for each simulation
     const updatedCaregivers = caregivers.map(c => ({
         ...c,
         location: getRandomLocation()
     }));
     setCaregivers(updatedCaregivers);
+    localStorage.setItem('caregivers', JSON.stringify(updatedCaregivers));
 
     const newLocation = getRandomLocation();
     setLocation(newLocation);
@@ -240,12 +259,36 @@ const DashboardPage: FC = () => {
              />
           </div>
           <div className="lg:col-span-1 space-y-8">
-            <CaregiverManager 
-              caregivers={caregivers} 
-              setCaregivers={setCaregivers}
-              onSimulateFall={handleSimulateFall}
-              isAlertActive={isAlertActive}
-            />
+            <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <TestTubeDiagonal className="w-6 h-6" />
+                        <span>System Simulation</span>
+                    </CardTitle>
+                    <CardDescription>Trigger a test alert to ensure the system is working correctly.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex flex-col gap-4">
+                        <Select
+                            onValueChange={(value: FallSeverity) => setSimulationSeverity(value)}
+                            defaultValue={simulationSeverity}
+                            disabled={isAlertActive}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select fall severity" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="low">Low Severity</SelectItem>
+                                <SelectItem value="medium">Medium Severity</SelectItem>
+                                <SelectItem value="high">High Severity</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Button onClick={() => handleSimulateFall(simulationSeverity)} disabled={isAlertActive} size="lg">
+                            Simulate Fall Event
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
           </div>
         </div>
       </div>
