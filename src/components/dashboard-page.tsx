@@ -14,10 +14,11 @@ import { CommunicationCard } from '@/components/communication-card';
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { TestTubeDiagonal } from 'lucide-react';
+import { TestTubeDiagonal, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { doc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import Link from 'next/link';
 
 const KUNDRATHUR_SRIPERUMBUDUR_BOUNDS = {
     minLat: 12.96,
@@ -228,66 +229,74 @@ const DashboardPage: FC = () => {
   return (
     <>
       <audio ref={audioRef} src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" loop />
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        <div className="lg:col-span-2 space-y-8">
-          {showCommunicationCard ? (
-              <CommunicationCard
-                  caregiver={currentCaregiver}
-                  status={communicationStatus}
-                  onAccept={() => setCommunicationStatus('active')}
-                  onEnd={() => {
-                      setCommunicationStatus('ended');
-                      resetAlert();
-                      toast({ title: "Call Ended", description: "The incident has been resolved."});
-                  }}
+      <div className="space-y-4">
+        <Link href="/caregivers" passHref>
+          <Button variant="outline">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Caregivers
+          </Button>
+        </Link>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          <div className="lg:col-span-2 space-y-8">
+            {showCommunicationCard ? (
+                <CommunicationCard
+                    caregiver={currentCaregiver}
+                    status={communicationStatus}
+                    onAccept={() => setCommunicationStatus('active')}
+                    onEnd={() => {
+                        setCommunicationStatus('ended');
+                        resetAlert();
+                        toast({ title: "Call Ended", description: "The incident has been resolved."});
+                    }}
+                />
+            ) : (
+                <AlertStatusCard 
+                status={alertStatus} 
+                caregiver={currentCaregiver}
+                escalation={escalation}
+                fallTimestamp={fallTimestamp}
+                onAcknowledge={handleAcknowledge}
+                onReset={resetAlert}
+                />
+            )}
+            <LocationMap 
+                location={location} 
+                caregivers={caregivers.filter(c => c.isAvailable)} 
+                isAlertActive={isAlertActive}
               />
-          ) : (
-              <AlertStatusCard 
-              status={alertStatus} 
-              caregiver={currentCaregiver}
-              escalation={escalation}
-              fallTimestamp={fallTimestamp}
-              onAcknowledge={handleAcknowledge}
-              onReset={resetAlert}
-              />
-          )}
-          <LocationMap 
-              location={location} 
-              caregivers={caregivers.filter(c => c.isAvailable)} 
-              isAlertActive={isAlertActive}
-            />
-        </div>
-        <div className="lg:col-span-1 space-y-8">
-          <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                      <TestTubeDiagonal className="w-6 h-6" />
-                      <span>System Simulation</span>
-                  </CardTitle>
-                  <CardDescription>Trigger a test alert to ensure the system is working correctly.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                  <div className="flex flex-col gap-4">
-                      <Select
-                          onValueChange={(value: FallSeverity) => setSimulationSeverity(value)}
-                          defaultValue={simulationSeverity}
-                          disabled={isAlertActive}
-                      >
-                          <SelectTrigger>
-                              <SelectValue placeholder="Select fall severity" />
-                          </SelectTrigger>
-                          <SelectContent>
-                              <SelectItem value="low">Low Severity</SelectItem>
-                              <SelectItem value="medium">Medium Severity</SelectItem>
-                              <SelectItem value="high">High Severity</SelectItem>
-                          </SelectContent>
-                      </Select>
-                      <Button onClick={() => handleSimulateFall(simulationSeverity)} disabled={isAlertActive} size="lg">
-                          Simulate Fall Event
-                      </Button>
-                  </div>
-              </CardContent>
-          </Card>
+          </div>
+          <div className="lg:col-span-1 space-y-8">
+            <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <TestTubeDiagonal className="w-6 h-6" />
+                        <span>System Simulation</span>
+                    </CardTitle>
+                    <CardDescription>Trigger a test alert to ensure the system is working correctly.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex flex-col gap-4">
+                        <Select
+                            onValueChange={(value: FallSeverity) => setSimulationSeverity(value)}
+                            defaultValue={simulationSeverity}
+                            disabled={isAlertActive}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select fall severity" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="low">Low Severity</SelectItem>
+                                <SelectItem value="medium">Medium Severity</SelectItem>
+                                <SelectItem value="high">High Severity</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Button onClick={() => handleSimulateFall(simulationSeverity)} disabled={isAlertActive} size="lg">
+                            Simulate Fall Event
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </>
