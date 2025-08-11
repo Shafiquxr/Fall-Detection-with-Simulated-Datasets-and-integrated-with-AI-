@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarInset } from '@/components/ui/sidebar';
-import { LayoutDashboard, Users, HeartPulse, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, HeartPulse, LogOut, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter, usePathname } from 'next/navigation';
 import { Separator } from '@/components/ui/separator';
@@ -27,7 +27,7 @@ export default function AuthenticatedLayout({
   if (loading || !user) {
     return (
         <div className="flex items-center justify-center h-screen">
-            <div className="text-2xl">Loading...</div>
+            <Loader2 className="mr-2 h-16 w-16 animate-spin" />
         </div>
     )
   }

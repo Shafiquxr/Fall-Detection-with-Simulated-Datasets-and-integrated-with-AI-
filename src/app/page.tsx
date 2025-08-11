@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import DashboardPage from '@/components/dashboard-page';
+import { Loader2 } from 'lucide-react';
 
 export default function Page() {
     const { user, loading } = useAuth();
@@ -19,7 +20,7 @@ export default function Page() {
     if (loading || !user) {
         return (
             <div className="flex items-center justify-center h-screen">
-                <div className="text-2xl">Loading...</div>
+                <Loader2 className="mr-2 h-16 w-16 animate-spin" />
             </div>
         );
     }
