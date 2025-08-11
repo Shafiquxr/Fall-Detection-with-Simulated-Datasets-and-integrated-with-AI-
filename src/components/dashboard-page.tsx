@@ -9,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useInterval } from "@/hooks/use-interval";
 import { AlertStatusCard } from '@/components/alert-status-card';
 import { LocationMap } from '@/components/location-map';
-import { Separator } from '@/components/ui/separator';
 import { sendNotification } from '@/services/notification-service';
 import { CommunicationCard } from '@/components/communication-card';
 import { Button } from './ui/button';
@@ -84,42 +83,25 @@ const DashboardPage: FC = () => {
   const isTimerRunning = alertStatus === 'active' && escalation !== null;
 
   const notifyCaregiver = useCallback(async (caregiverIndex: number, severity: FallSeverity) => {
-    const realCaregiver = caregivers.find(c => c.id === escalation?.path[caregiverIndex]);
-    if (!realCaregiver) {
-        const path = escalation?.path;
-        if(path) {
-            const caregiver = caregivers[path[caregiverIndex]];
-            if(!caregiver) return;
-            try {
-                await sendNotification(caregiver, severity);
-                toast({
-                    title: "Notifying Caregiver",
-                    description: `Contacting ${caregiver.name}...`,
-                });
-            } catch (error) {
-                console.error("Failed to send notification:", error);
-                toast({
-                    title: "Notification Failed",
-                    description: `Could not send notification to ${caregiver.name}.`,
-                    variant: "destructive",
-                });
-            }
-        }
-        return
-    };
+    if(!escalation) return;
+    const path = escalation.path;
+    const caregiverId = path[caregiverIndex];
+    const caregiver = caregivers[caregiverId];
+
+    if(!caregiver) return;
 
     toast({
         title: "Notifying Caregiver",
-        description: `Contacting ${realCaregiver.name}...`,
+        description: `Contacting ${caregiver.name}...`,
     });
 
     try {
-        await sendNotification(realCaregiver, severity);
+        await sendNotification(caregiver, severity);
     } catch (error) {
         console.error("Failed to send notification:", error);
         toast({
             title: "Notification Failed",
-            description: `Could not send notification to ${realCaregiver.name}.`,
+            description: `Could not send notification to ${caregiver.name}.`,
             variant: "destructive",
         });
     }
@@ -163,7 +145,7 @@ const DashboardPage: FC = () => {
     setAlertStatus("acknowledged");
     setCommunicationStatus('calling');
     if (escalation) {
-        const currentCaregiver = caregivers.find(c => c.id === escalation.path[escalation.currentIndex]);
+        const currentCaregiver = caregivers.find(c => c.id === escalation.path[escalation.currentIndex].toString());
         if (currentCaregiver) {
             toast({
                 title: "Alert Acknowledged",
@@ -181,7 +163,7 @@ const DashboardPage: FC = () => {
         ...c,
         location: getRandomLocation()
     }));
-    setCaregivers(updatedCaregivers);
+    // Note: We don't call setCaregivers here as we are not persisting these random locations.
     
     const newLocation = getRandomLocation();
     setLocation(newLocation);
@@ -244,80 +226,71 @@ const DashboardPage: FC = () => {
   const showCommunicationCard = alertStatus === 'acknowledged' && communicationStatus !== 'ended' && currentCaregiver;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <>
       <audio ref={audioRef} src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" loop />
-      <div className="container mx-auto p-4 md:p-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          <div className="lg:col-span-2 space-y-8">
-            {showCommunicationCard ? (
-                <CommunicationCard
-                    caregiver={currentCaregiver}
-                    status={communicationStatus}
-                    onAccept={() => setCommunicationStatus('active')}
-                    onEnd={() => {
-                        setCommunicationStatus('ended');
-                        resetAlert();
-                        toast({ title: "Call Ended", description: "The incident has been resolved."});
-                    }}
-                />
-            ) : (
-                <AlertStatusCard 
-                status={alertStatus} 
-                caregiver={currentCaregiver}
-                escalation={escalation}
-                fallTimestamp={fallTimestamp}
-                onAcknowledge={handleAcknowledge}
-                onReset={resetAlert}
-                />
-            )}
-            <LocationMap 
-                location={location} 
-                caregivers={caregivers.filter(c => c.isAvailable)} 
-                isAlertActive={isAlertActive}
-             />
-          </div>
-          <div className="lg:col-span-1 space-y-8">
-            <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <TestTubeDiagonal className="w-6 h-6" />
-                        <span>System Simulation</span>
-                    </CardTitle>
-                    <CardDescription>Trigger a test alert to ensure the system is working correctly.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex flex-col gap-4">
-                        <Select
-                            onValuechange={(value: FallSeverity) => setSimulationSeverity(value)}
-                            defaultValue={simulationSeverity}
-                            disabled={isAlertActive}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select fall severity" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="low">Low Severity</SelectItem>
-                                <SelectItem value="medium">Medium Severity</SelectItem>
-                                <SelectItem value="high">High Severity</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <Button onClick={() => handleSimulateFall(simulationSeverity)} disabled={isAlertActive} size="lg">
-                            Simulate Fall Event
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <div className="lg:col-span-2 space-y-8">
+          {showCommunicationCard ? (
+              <CommunicationCard
+                  caregiver={currentCaregiver}
+                  status={communicationStatus}
+                  onAccept={() => setCommunicationStatus('active')}
+                  onEnd={() => {
+                      setCommunicationStatus('ended');
+                      resetAlert();
+                      toast({ title: "Call Ended", description: "The incident has been resolved."});
+                  }}
+              />
+          ) : (
+              <AlertStatusCard 
+              status={alertStatus} 
+              caregiver={currentCaregiver}
+              escalation={escalation}
+              fallTimestamp={fallTimestamp}
+              onAcknowledge={handleAcknowledge}
+              onReset={resetAlert}
+              />
+          )}
+          <LocationMap 
+              location={location} 
+              caregivers={caregivers.filter(c => c.isAvailable)} 
+              isAlertActive={isAlertActive}
+            />
+        </div>
+        <div className="lg:col-span-1 space-y-8">
+          <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                      <TestTubeDiagonal className="w-6 h-6" />
+                      <span>System Simulation</span>
+                  </CardTitle>
+                  <CardDescription>Trigger a test alert to ensure the system is working correctly.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                  <div className="flex flex-col gap-4">
+                      <Select
+                          onValueChange={(value: FallSeverity) => setSimulationSeverity(value)}
+                          defaultValue={simulationSeverity}
+                          disabled={isAlertActive}
+                      >
+                          <SelectTrigger>
+                              <SelectValue placeholder="Select fall severity" />
+                          </SelectTrigger>
+                          <SelectContent>
+                              <SelectItem value="low">Low Severity</SelectItem>
+                              <SelectItem value="medium">Medium Severity</SelectItem>
+                              <SelectItem value="high">High Severity</SelectItem>
+                          </SelectContent>
+                      </Select>
+                      <Button onClick={() => handleSimulateFall(simulationSeverity)} disabled={isAlertActive} size="lg">
+                          Simulate Fall Event
+                      </Button>
+                  </div>
+              </CardContent>
+          </Card>
         </div>
       </div>
-
-      <footer className="container mx-auto p-4 mt-8">
-          <Separator />
-          <p className="text-center text-sm text-muted-foreground pt-4">
-            Fall Wise &copy; {new Date().getFullYear()} - Your safety is our priority.
-          </p>
-      </footer>
-    </div>
+    </>
   );
 };
 

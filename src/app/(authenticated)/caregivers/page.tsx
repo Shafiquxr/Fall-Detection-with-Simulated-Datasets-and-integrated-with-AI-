@@ -5,9 +5,8 @@ import type { FC } from 'react';
 import React, { useState, useEffect, useCallback } from 'react';
 import { CaregiverManager } from '@/components/caregiver-manager';
 import type { Caregiver } from '@/lib/types';
-import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/use-auth';
-import { doc, getDoc, setDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
 
@@ -43,6 +42,9 @@ const CaregiversPage: FC = () => {
                 console.log("No user document found!");
             }
             setIsLoading(false);
+        }, (error) => {
+            console.error("Error fetching caregivers:", error);
+            setIsLoading(false);
         });
     } else {
         setIsLoading(false);
@@ -64,22 +66,11 @@ const CaregiversPage: FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-        <div className="container mx-auto p-4 md:p-8">
-            <div className="max-w-2xl mx-auto">
-                 <CaregiverManager 
-                    caregivers={caregivers} 
-                    setCaregivers={handleSetCaregivers}
-                />
-            </div>
-        </div>
-
-      <footer className="container mx-auto p-4 mt-8">
-          <Separator />
-          <p className="text-center text-sm text-muted-foreground pt-4">
-            Fall Wise &copy; {new Date().getFullYear()} - Your safety is our priority.
-          </p>
-      </footer>
+    <div className="max-w-2xl mx-auto">
+        <CaregiverManager 
+            caregivers={caregivers} 
+            setCaregivers={handleSetCaregivers}
+        />
     </div>
   );
 };
