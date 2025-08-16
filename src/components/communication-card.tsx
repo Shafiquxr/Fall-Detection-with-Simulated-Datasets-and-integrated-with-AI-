@@ -3,7 +3,7 @@
 
 import type { FC } from 'react';
 import React from 'react';
-import { Phone, PhoneOff, Mic, MicOff, PhoneIncoming, AlertTriangle } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff, PhoneIncoming, AlertTriangle, UserCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -18,10 +18,9 @@ interface CommunicationCardProps {
 
 const CallingState: FC<{ caregiver: Caregiver; onAccept: () => void }> = ({ caregiver, onAccept }) => (
     <div className="flex flex-col items-center justify-center text-center p-8 space-y-4">
-        <Avatar className="w-24 h-24 border-4 border-primary animate-pulse">
-            <AvatarImage src={caregiver.avatarUrl} alt={caregiver.name} />
-            <AvatarFallback>{caregiver.name.charAt(0)}</AvatarFallback>
-        </Avatar>
+        <div className="relative">
+            <UserCircle className="w-24 h-24 text-primary animate-pulse" />
+        </div>
         <h3 className="text-2xl font-semibold">Incoming Call</h3>
         <p className="text-muted-foreground">{caregiver.name} is calling to check on you.</p>
         <Button onClick={onAccept} size="lg" className="bg-green-600 hover:bg-green-700 text-white mt-4">
@@ -36,10 +35,7 @@ const ActiveState: FC<{ caregiver: Caregiver; onEnd: () => void }> = ({ caregive
     
     return (
         <div className="flex flex-col items-center justify-center text-center p-8 space-y-4">
-             <Avatar className="w-24 h-24 border-4 border-green-500">
-                <AvatarImage src={caregiver.avatarUrl} alt={caregiver.name} />
-                <AvatarFallback>{caregiver.name.charAt(0)}</AvatarFallback>
-            </Avatar>
+             <UserCircle className="w-24 h-24 text-green-500" />
             <h3 className="text-2xl font-semibold">Connected</h3>
             <p className="text-muted-foreground">Speaking with {caregiver.name}</p>
             <div className="text-green-500 flex items-center gap-2 font-mono">

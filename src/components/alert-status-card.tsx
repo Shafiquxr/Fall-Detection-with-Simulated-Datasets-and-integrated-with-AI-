@@ -1,7 +1,7 @@
 'use client'
 
 import type { FC } from 'react';
-import { ShieldCheck, ShieldAlert, UserCheck, Loader, AlertTriangle, Clock } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, UserCheck, Loader, AlertTriangle, Clock, UserCircle } from 'lucide-react';
 import type { AlertStatus, Caregiver, Escalation } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -83,10 +83,7 @@ const ActiveState: FC<Omit<AlertStatusCardProps, 'status' | 'onReset'>> = ({ car
         <p className="text-muted-foreground">Notifying nearest caregiver...</p>
         
         <div className="flex flex-col items-center gap-4 py-6">
-          <Avatar className="w-24 h-24 border-4 border-primary">
-            <AvatarImage src={caregiver.avatarUrl} alt={caregiver.name} />
-            <AvatarFallback>{caregiver.name.charAt(0)}</AvatarFallback>
-          </Avatar>
+          <UserCircle className="w-24 h-24 text-primary" />
           <p className="text-xl font-medium">{caregiver.name}</p>
         </div>
 

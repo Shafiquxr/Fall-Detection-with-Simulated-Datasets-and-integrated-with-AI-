@@ -3,7 +3,7 @@
 
 import type { FC, Dispatch, SetStateAction } from 'react';
 import React, { useState } from 'react';
-import { Phone, MessageSquare, Bell, User, Users, Edit, PlusCircle, Trash } from 'lucide-react';
+import { Phone, MessageSquare, Bell, User, Users, Edit, PlusCircle, Trash, UserCircle } from 'lucide-react';
 import type { Caregiver } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -25,8 +25,6 @@ interface CaregiverManagerProps {
 const emptyCaregiver: Omit<Caregiver, 'id' | 'location'> = {
     name: '',
     phoneNumber: '',
-    avatarUrl: 'https://i.pravatar.cc/150',
-    dataAiHint: "person",
     isAvailable: true,
     contactMethods: { sms: true, call: true, app: true },
     historicalResponseTime: 40,
@@ -78,10 +76,6 @@ const CaregiverForm: FC<{
                         <Label htmlFor="phoneNumber">Phone Number</Label>
                         <Input id="phoneNumber" value={editedCaregiver.phoneNumber} onChange={(e) => setEditedCaregiver({...editedCaregiver, phoneNumber: e.target.value })} />
                     </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="avatarUrl">Avatar URL</Label>
-                        <Input id="avatarUrl" value={editedCaregiver.avatarUrl} onChange={(e) => setEditedCaregiver({...editedCaregiver, avatarUrl: e.target.value })} />
-                    </div>
                     <div className="space-y-2">
                         <Label htmlFor="responseTime">Historical Response Time (s)</Label>
                         <Input id="responseTime" type="number" value={editedCaregiver.historicalResponseTime} onChange={(e) => setEditedCaregiver({...editedCaregiver, historicalResponseTime: parseInt(e.target.value) || 0 })} />
@@ -118,10 +112,7 @@ const CaregiverForm: FC<{
 const CaregiverCard: FC<{ caregiver: Caregiver; onAvailabilityChange: (id: string, isAvailable: boolean) => void; onCaregiverUpdate: (caregiver: Caregiver) => void; onCaregiverDelete: (id: string) => void; }> = ({ caregiver, onAvailabilityChange, onCaregiverUpdate, onCaregiverDelete }) => (
     <div className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-colors">
         <div className="flex items-center gap-4">
-            <Avatar className="h-12 w-12">
-                <AvatarImage src={caregiver.avatarUrl} alt={caregiver.name} data-ai-hint={caregiver.dataAiHint} />
-                <AvatarFallback>{caregiver.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-            </Avatar>
+            <UserCircle className="h-12 w-12 text-muted-foreground" />
             <div>
                 <p className="font-semibold">{caregiver.name}</p>
                 <div className="flex items-center gap-2 text-muted-foreground mt-1">

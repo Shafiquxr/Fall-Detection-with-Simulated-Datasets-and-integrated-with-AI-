@@ -1,8 +1,6 @@
 export type Caregiver = {
   id: string;
   name: string;
-  avatarUrl: string;
-  dataAiHint: string;
   isAvailable: boolean;
   contactMethods: {
     sms: boolean;
