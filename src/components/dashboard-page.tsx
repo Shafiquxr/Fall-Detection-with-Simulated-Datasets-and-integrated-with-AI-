@@ -9,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useInterval } from "@/hooks/use-interval";
 import { AlertStatusCard } from '@/components/alert-status-card';
 import { LocationMap } from '@/components/location-map';
-import { sendNotification } from '@/services/notification-service';
 import { CommunicationCard } from '@/components/communication-card';
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -19,6 +18,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { doc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
+import { sendNotificationFlow } from '@/ai/flows/send-notification-flow';
 
 const KUNDRATHUR_SRIPERUMBUDUR_BOUNDS = {
     minLat: 12.96,
@@ -89,7 +89,7 @@ const DashboardPage: FC = () => {
     const caregiverId = path[caregiverIndex];
     const caregiver = caregivers[caregiverId];
 
-    if(!caregiver) return;
+    if(!caregiver || !caregiver.phoneNumber) return;
 
     toast({
         title: "Notifying Caregiver",
@@ -97,12 +97,21 @@ const DashboardPage: FC = () => {
     });
 
     try {
-        await sendNotification(caregiver, severity);
+        const message = `URGENT: A '${severity}' severity fall has been detected for your patient. Please respond immediately.`;
+        const result = await sendNotificationFlow({
+            phoneNumber: caregiver.phoneNumber,
+            message: message,
+            name: caregiver.name
+        });
+
+        if (!result.success) {
+            throw new Error(result.message);
+        }
     } catch (error) {
         console.error("Failed to send notification:", error);
         toast({
             title: "Notification Failed",
-            description: `Could not send notification to ${caregiver.name}.`,
+            description: `Could not send notification to ${caregiver.name}. Check server logs.`,
             variant: "destructive",
         });
     }
