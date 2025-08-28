@@ -18,7 +18,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { doc, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
-import { sendNotificationFlow } from '@/ai/flows/send-notification-flow';
+import { sendNotification } from '@/ai/flows/send-notification-flow';
 
 const KUNDRATHUR_SRIPERUMBUDUR_BOUNDS = {
     minLat: 12.96,
@@ -98,7 +98,7 @@ const DashboardPage: FC = () => {
 
     try {
         const message = `URGENT: A '${severity}' severity fall has been detected for your patient. Please respond immediately.`;
-        const result = await sendNotificationFlow({
+        const result = await sendNotification({
             phoneNumber: caregiver.phoneNumber,
             message: message,
             name: caregiver.name

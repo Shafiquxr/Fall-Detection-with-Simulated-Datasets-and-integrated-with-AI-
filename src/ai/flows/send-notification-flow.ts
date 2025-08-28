@@ -1,25 +1,18 @@
+
 'use server';
 
 /**
  * @fileOverview A secure backend flow to send notifications via Twilio.
  * 
- * - sendNotificationFlow - A function that sends SMS and initiates a voice call.
- * - SendNotificationInput - The input type for the sendNotificationFlow function.
+ * - sendNotification - An async function that sends SMS and initiates a voice call.
  */
 
 import { ai } from '@/ai/genkit';
-import type { Flow } from 'genkit';
+import { SendNotificationInputSchema, type SendNotificationInput } from '@/lib/types';
 import { z } from 'genkit';
 import Twilio from 'twilio';
 
-export const SendNotificationInputSchema = z.object({
-  phoneNumber: z.string().describe("The recipient's phone number in E.164 format."),
-  message: z.string().describe('The text message to be sent.'),
-  name: z.string().describe("The recipient's name."),
-});
-export type SendNotificationInput = z.infer<typeof SendNotificationInputSchema>;
-
-export const sendNotificationFlow: Flow<SendNotificationInput> = ai.defineFlow(
+const sendNotificationFlow = ai.defineFlow(
   {
     name: 'sendNotificationFlow',
     inputSchema: SendNotificationInputSchema,
@@ -66,3 +59,8 @@ export const sendNotificationFlow: Flow<SendNotificationInput> = ai.defineFlow(
     }
   }
 );
+
+
+export async function sendNotification(input: SendNotificationInput) {
+    return await sendNotificationFlow(input);
+}

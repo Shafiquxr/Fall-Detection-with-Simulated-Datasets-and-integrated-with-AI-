@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export type Caregiver = {
   id: string;
   name: string;
@@ -28,3 +30,10 @@ export type Location = {
 };
 
 export type CommunicationStatus = "idle" | "calling" | "active" | "ended";
+
+export const SendNotificationInputSchema = z.object({
+  phoneNumber: z.string().describe("The recipient's phone number in E.164 format."),
+  message: z.string().describe('The text message to be sent.'),
+  name: z.string().describe("The recipient's name."),
+});
+export type SendNotificationInput = z.infer<typeof SendNotificationInputSchema>;
