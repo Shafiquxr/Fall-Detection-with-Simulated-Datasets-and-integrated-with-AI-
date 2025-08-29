@@ -2,9 +2,15 @@
 
 'use client';
 
-import React from 'react';
-import DashboardPage from '@/components/dashboard-page';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function HomePage() {
-  return <DashboardPage />;
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace('/caregivers');
+  }, [router]);
+
+  return null;
 }
