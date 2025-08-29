@@ -63,12 +63,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
     const user = userCredential.user;
     
+    // Create a fresh list of caregivers for the new user.
+    // Each caregiver gets a unique ID to be used as a key in React components.
     const initialCaregivers = getInitialCaregivers().map(c => ({
         ...c,
         id: new Date().getTime().toString() + Math.random().toString(36).substring(2, 9),
     }));
 
-    // Create a document for the new user in Firestore
+    // Create a new document for the new user in the 'users' collection in Firestore.
+    // The document is named with the user's unique ID (uid).
     await setDoc(doc(db, "users", user.uid), {
       email: user.email,
       caregivers: initialCaregivers,
