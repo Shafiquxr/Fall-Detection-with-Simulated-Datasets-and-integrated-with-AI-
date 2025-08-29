@@ -29,11 +29,6 @@ const getRandomLocation = (bounds = KUNDRATHUR_SRIPERUMBUDUR_BOUNDS) => {
 };
 
 const getInitialCaregivers = (): Omit<Caregiver, 'id'>[] => [
-    { name: 'Guru Prasath A', phoneNumber: '+915642786743', isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 30, location: getRandomLocation() },
-    { name: 'Shafiqur Rahaman', phoneNumber: '+918939837897', isAvailable: true, contactMethods: { sms: false, call: true, app: true }, historicalResponseTime: 65, location: getRandomLocation() },
-    { name: 'Sham Andrew R', phoneNumber: '+916538901510', isAvailable: true, contactMethods: { sms: true, call: true, app: false }, historicalResponseTime: 90, location: getRandomLocation() },
-    { name: 'Sean Maximus J', phoneNumber: '+915368109091', isAvailable: true, contactMethods: { sms: true, call: true, app: true }, historicalResponseTime: 25, location: getRandomLocation() },
-    { name: 'Sanjana Umapathy', phoneNumber: '+917871015864', isAvailable: false, contactMethods: { sms: true, call: false, app: true }, historicalResponseTime: 45, location: getRandomLocation() },
 ];
 
 
