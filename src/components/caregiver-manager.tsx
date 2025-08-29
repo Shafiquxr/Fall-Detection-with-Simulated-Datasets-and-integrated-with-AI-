@@ -3,10 +3,9 @@
 
 import type { FC, Dispatch, SetStateAction } from 'react';
 import React, { useState } from 'react';
-import { Phone, MessageSquare, Bell, User, Users, Edit, PlusCircle, Trash, UserCircle } from 'lucide-react';
+import { Phone, MessageSquare, Bell, Users, Edit, PlusCircle, Trash, UserCircle } from 'lucide-react';
 import type { Caregiver } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 interface CaregiverManagerProps {
     caregivers: Caregiver[];
-    setCaregivers: Dispatch<SetStateAction<Caregiver[]>>;
+    onCaregiversChange: (updatedCaregivers: Caregiver[]) => void;
 }
 
 const emptyCaregiver: Omit<Caregiver, 'id' | 'location'> = {
@@ -31,6 +30,7 @@ const emptyCaregiver: Omit<Caregiver, 'id' | 'location'> = {
 }
 
 const getRandomLocation = (): { lat: number; lng: number } => {
+    // A random location for demonstration purposes
     const KUNDRATHUR_SRIPERUMBUDUR_BOUNDS = {
         minLat: 12.96,
         maxLat: 13.00,
@@ -58,6 +58,13 @@ const CaregiverForm: FC<{
         setOpen(false);
     }
     
+    // Reset form when dialog opens with new data
+    React.useEffect(() => {
+        if (open) {
+            setEditedCaregiver(caregiver);
+        }
+    }, [open, caregiver]);
+
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -160,14 +167,19 @@ const CaregiverCard: FC<{ caregiver: Caregiver; onAvailabilityChange: (id: strin
 );
 
 
-export const CaregiverManager: FC<CaregiverManagerProps> = ({ caregivers, setCaregivers }) => {
+export const CaregiverManager: FC<CaregiverManagerProps> = ({ caregivers, onCaregiversChange }) => {
 
+  // These handlers now modify a copy of the caregivers array and pass the full updated list
+  // to the parent component via onCaregiversChange.
+  
   const handleAvailabilityChange = (id: string, isAvailable: boolean) => {
-    setCaregivers(prev => prev.map(c => c.id === id ? { ...c, isAvailable } : c));
+    const updatedCaregivers = caregivers.map(c => c.id === id ? { ...c, isAvailable } : c);
+    onCaregiversChange(updatedCaregivers);
   };
   
   const handleCaregiverUpdate = (updatedCaregiver: Caregiver) => {
-    setCaregivers(prev => prev.map(c => c.id === updatedCaregiver.id ? updatedCaregiver : c));
+    const updatedCaregivers = caregivers.map(c => c.id === updatedCaregiver.id ? updatedCaregiver : c);
+    onCaregiversChange(updatedCaregivers);
   };
   
   const handleCaregiverAdd = (newCaregiver: Partial<Caregiver>) => {
@@ -177,11 +189,13 @@ export const CaregiverManager: FC<CaregiverManagerProps> = ({ caregivers, setCar
         ...emptyCaregiver,
         ...newCaregiver,
     };
-    setCaregivers(prev => [...prev, caregiverToAdd]);
+    const updatedCaregivers = [...caregivers, caregiverToAdd];
+    onCaregiversChange(updatedCaregivers);
   }
 
   const handleCaregiverDelete = (id: string) => {
-    setCaregivers(prev => prev.filter(c => c.id !== id));
+    const updatedCaregivers = caregivers.filter(c => c.id !== id);
+    onCaregiversChange(updatedCaregivers);
   }
   
   return (
